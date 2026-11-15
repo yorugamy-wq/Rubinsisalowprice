@@ -1,0 +1,4005 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0c11">
+<meta name="mobile-web-app-capable" content="yes">
+
+
+
+<title>Каменный путь — шахтёр, огранщик, ювелир</title>
+<style>
+  :root{
+    --bg:#0a0c11; --bg2:#0e1118;
+    --panel:#151a24; --panel2:#1b2130; --panel3:#212a3b;
+    --line:#2b3446; --line2:#3a465c;
+    --text:#e9edf5; --muted:#8c98ac;
+    --gold:#ffcc66; --gold2:#ffb020;
+    --good:#57d98a; --bad:#ff6b6b; --info:#6fb7ff;
+    --purple:#c084fc; --green:#4ade80; --blue:#60a5fa; --red:#fb7185; --ice:#bae6fd;
+    --safe-b:env(safe-area-inset-bottom, 0px);
+    --safe-t:env(safe-area-inset-top, 0px);
+    --nav-h:calc(104px + var(--safe-b));
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none}
+  html,body{height:100%; overscroll-behavior:none}
+  body{
+    margin:0; color:var(--text); position:fixed; inset:0; width:100%; height:100%;
+    font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Arial, sans-serif;
+    background:
+      radial-gradient(900px 500px at 15% -10%, #1c2436 0%, transparent 60%),
+      radial-gradient(700px 460px at 110% 10%, #241a2e 0%, transparent 55%),
+      radial-gradient(700px 520px at 50% 115%, #14202a 0%, transparent 60%),
+      var(--bg);
+    overflow:hidden; user-select:none; -webkit-user-select:none;
+    padding-top:var(--safe-t);
+    touch-action:manipulation;
+  }
+  button{font-family:inherit; -webkit-appearance:none}
+  #app{display:flex; flex-direction:column; height:100%; overflow:hidden; max-width:820px; margin:0 auto; position:relative}
+
+  /* ---------- HUD ---------- */
+  header#hud{
+    display:flex; align-items:center; gap:6px; flex-wrap:nowrap;
+    padding:7px 10px 7px calc(10px + env(safe-area-inset-left,0px));
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(22,27,38,.98), rgba(14,17,24,.94));
+    backdrop-filter:blur(10px); z-index:20; flex:none;
+  }
+  .brand{font-weight:800; letter-spacing:.04em; font-size:12px; color:var(--gold); white-space:nowrap;
+    text-shadow:0 0 16px rgba(255,204,102,.35); display:none}
+  .hud-row{display:flex; gap:5px; flex-wrap:nowrap; flex:1; justify-content:space-between; align-items:center; overflow:hidden}
+  .stat{
+    display:flex; align-items:center; gap:4px; font-size:11.5px; font-weight:700;
+    background:linear-gradient(180deg,#1b2231,#161c29);
+    border:1px solid var(--line); border-radius:8px; padding:5px 7px; white-space:nowrap; flex:none;
+    min-height:30px;
+  }
+  .stat small{color:var(--muted); font-weight:500; font-size:10px}
+  .stat.money{color:var(--good)}
+  .stat.coins{color:var(--gold)}
+  .stat.tickets{color:var(--info); display:none}
+  .stat.energy{color:#ffd166}
+  .stat.level{color:var(--purple)}
+  .stat .ico{font-size:12px}
+  .ebar{width:52px; height:6px; border-radius:4px; background:#0c1017; overflow:hidden; border:1px solid #2a3444}
+  .ebar i{display:block; height:100%; background:linear-gradient(90deg,#ffb020,#ffe08a); transition:width .25s}
+  .xbar{width:34px; height:5px; border-radius:4px; background:#0c1017; overflow:hidden; border:1px solid #2a3444}
+  .xbar i{display:block; height:100%; background:linear-gradient(90deg,#8b5cf6,#c084fc)}
+
+  /* ---------- main ---------- */
+  main{position:relative; overflow-y:auto; overflow-x:hidden; min-height:0; flex:1;
+    -webkit-overflow-scrolling:touch; overscroll-behavior:contain; scrollbar-width:none}
+  main::-webkit-scrollbar{display:none}
+  .screen{display:none}
+  .screen.active{display:block}
+  .wrap{max-width:620px; margin:0 auto; padding:12px 12px calc(var(--nav-h) + 20px)}
+
+  /* mine screen */
+  #screen-mine.active{display:block; height:100%; overflow:hidden}
+  body.mine-mode #tabs{display:none}
+  body.mine-mode header#hud{display:none}
+  #mineWrap{position:relative; height:100%; min-height:0; background:#05070a; overflow:hidden; touch-action:none}
+  #mineCanvas{display:block; width:100%; height:100%; touch-action:none; pointer-events:none}
+
+  /* верхняя панель шахты */
+  #mineHud{position:absolute; left:0; right:0; top:0; z-index:6; pointer-events:none;
+    padding:calc(8px + var(--safe-t)) 10px 0; display:flex; align-items:flex-start; justify-content:space-between; gap:8px}
+  .mh-left{display:flex; align-items:center; gap:8px; pointer-events:auto}
+  #mineExit{width:40px; height:40px; border-radius:12px; background:rgba(8,10,15,.84); border:1px solid rgba(255,255,255,.16);
+    color:#e9edf5; font-size:18px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); flex:none}
+  #mineExit:active{transform:scale(.95)}
+  .mh-center{display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; min-width:0; pointer-events:none}
+  #mineEnergyChip{display:flex; align-items:center; gap:6px; padding:6px 11px; border-radius:20px;
+    background:rgba(8,10,15,.84); border:1px solid rgba(255,255,255,.13); font-size:11.5px; font-weight:800; color:#ffd166;
+    backdrop-filter:blur(8px); white-space:nowrap}
+  #mineEnergyChip .ebar{width:46px}
+  #mineName{font-size:10px; font-weight:700; color:#9aa6ba; background:rgba(8,10,15,.7); border-radius:20px;
+    padding:3px 9px; border:1px solid rgba(255,255,255,.08); max-width:148px; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; backdrop-filter:blur(6px)}
+  #mineFeed{display:flex; flex-direction:column; gap:4px; align-items:center; max-width:76%; width:max-content;
+    pointer-events:none; z-index:5; position:absolute; left:50%; transform:translateX(-50%);
+    bottom:calc(186px + var(--safe-b))}
+  .feed-item{font-size:10.5px; padding:4px 8px; border-radius:8px; background:rgba(8,10,15,.82); border:1px solid rgba(255,255,255,.1);
+    animation:slideIn .22s ease; backdrop-filter:blur(6px); white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis}
+  @keyframes slideIn{from{opacity:0; transform:translateX(14px)} to{opacity:1; transform:none}}
+  #minimap{position:absolute; right:10px; top:calc(56px + var(--safe-t)); width:84px; height:84px; border-radius:10px;
+    border:1px solid rgba(255,255,255,.15); background:rgba(0,0,0,.55); pointer-events:none; z-index:4}
+  #mineBagChip{position:absolute; right:10px; top:calc(146px + var(--safe-t)); z-index:4;
+    padding:4px 9px; border-radius:20px; background:rgba(8,10,15,.84); border:1px solid rgba(255,255,255,.12);
+    font-size:10.5px; font-weight:800; color:#c7d1e2; pointer-events:none; backdrop-filter:blur(6px)}
+
+  /* подсказка при входе */
+  #mineHint{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;
+    transition:opacity .3s; padding:0 18px; z-index:7}
+  .hint-box{background:rgba(8,10,15,.9); border:1px solid rgba(255,255,255,.13); border-radius:14px; padding:13px 15px;
+    text-align:center; font-size:11.5px; color:#cfd8e6; line-height:1.65; backdrop-filter:blur(8px); max-width:330px}
+  .hint-box b{color:var(--gold)}
+
+  /* нижние органы управления */
+  #turnPad{position:absolute; left:50%; transform:translateX(-50%); bottom:calc(28px + var(--safe-b)); display:flex; gap:10px; z-index:6}
+  .turn{width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,.22);
+    background:rgba(26,33,47,.88); color:#dfe7f5; font-size:19px; display:flex; align-items:center; justify-content:center;
+    touch-action:none; -webkit-user-select:none; user-select:none; padding:0; box-shadow:0 2px 8px rgba(0,0,0,.45)}
+  .turn:active,.turn.on{background:rgba(255,204,102,.92); color:#241804; border-color:#ffe4a6}
+  #joystick{position:absolute; left:14px; bottom:calc(16px + var(--safe-b)); width:116px; height:116px;
+    border-radius:50%; border:1.5px solid rgba(255,255,255,.18); background:radial-gradient(circle, rgba(22,29,42,.55), rgba(8,11,16,.72));
+    pointer-events:none; z-index:5; touch-action:none; backdrop-filter:blur(3px); transition:border-color .2s}
+  #joyKnob{position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #4a5670, #202838); border:1.5px solid #5a6884;
+    box-shadow:0 4px 14px rgba(0,0,0,.55); transition:transform .05s linear}
+  .dpad{position:absolute; width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,.20);
+    background:rgba(30,38,54,.88); color:#dfe7f5; font-size:11px; display:flex; align-items:center; justify-content:center;
+    pointer-events:auto; touch-action:none; -webkit-user-select:none; user-select:none; padding:0; line-height:1;
+    box-shadow:0 2px 8px rgba(0,0,0,.45)}
+  .dpad:active,.dpad.on{background:rgba(255,204,102,.92); color:#241804; border-color:#ffe4a6}
+  .dpad.up{left:50%; top:2px; transform:translateX(-50%)}
+  .dpad.down{left:50%; bottom:2px; transform:translateX(-50%)}
+  .dpad.left{left:2px; top:50%; transform:translateY(-50%)}
+  .dpad.right{right:2px; top:50%; transform:translateY(-50%)}
+  #joystick.hint{animation:joyPulse 1.8s ease-in-out infinite}
+  @keyframes joyPulse{0%,100%{border-color:rgba(255,255,255,.18)}50%{border-color:rgba(255,204,102,.6)}}
+  #swingBtn{position:absolute; right:16px; bottom:calc(22px + var(--safe-b)); width:88px; height:88px; border-radius:50%;
+    border:1.5px solid #ffdc8f; background:radial-gradient(circle at 36% 28%, #ffe6a6, #e8a52e 62%, #b97c14);
+    color:#3a2703; font-size:35px; display:flex; align-items:center; justify-content:center;
+    pointer-events:auto; z-index:5; touch-action:none; box-shadow:0 6px 18px rgba(255,180,60,.32), inset 0 -3px 8px rgba(120,70,0,.35);
+    transition:transform .08s ease}
+  #swingBtn:active{transform:scale(.93)}
+
+  /* ---------- nav (2 rows) ---------- */
+  nav#tabs{
+    display:grid; grid-template-columns:repeat(5, 1fr); gap:4px;
+    padding:6px 6px calc(6px + var(--safe-b));
+    border-top:1px solid var(--line);
+    background:linear-gradient(0deg, rgba(11,14,20,.99), rgba(17,21,30,.96));
+    backdrop-filter:blur(10px); z-index:20; flex:none;
+  }
+  .tab{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    padding:6px 2px; border-radius:10px; cursor:pointer; background:#141a26; border:1px solid #232c3c;
+    color:#9fabc0; font-size:9.5px; font-weight:700; min-height:44px; transition:.12s; position:relative;
+  }
+  .tab .ic{font-size:16px; line-height:1}
+  .tab.active{background:linear-gradient(180deg,#2c2617,#1d1910); border-color:#6b5628; color:var(--gold);
+    box-shadow:0 0 14px rgba(255,204,102,.14)}
+  .tab .badge{position:absolute; top:1px; right:3px; background:var(--gold); color:#20180a; border-radius:20px;
+    font-size:9px; padding:0 4px; font-weight:800; line-height:14px; min-width:14px; text-align:center}
+
+  /* ---------- common ---------- */
+  h1,h2,h3{margin:0 0 8px}
+  h1{font-size:18px; letter-spacing:.01em}
+  h2{font-size:14px; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+  h3{font-size:11.5px; color:#c7d1e2; font-weight:700; letter-spacing:.03em; text-transform:uppercase}
+  .sub{color:var(--muted); font-size:11.5px; line-height:1.5; margin:-4px 0 11px}
+  .panel{background:linear-gradient(180deg, rgba(24,30,42,.94), rgba(18,23,33,.94)); border:1px solid var(--line);
+    border-radius:13px; padding:11px; margin-bottom:11px; box-shadow:0 6px 20px rgba(0,0,0,.22)}
+  .panel.tight{padding:9px}
+  .grid{display:grid; gap:9px}
+  .g2{grid-template-columns:1fr}
+  .g3{grid-template-columns:1fr}
+  .g4{grid-template-columns:repeat(2,1fr)}
+  .row{display:flex; align-items:center; gap:7px; flex-wrap:wrap}
+  .row.between{justify-content:space-between}
+  .muted{color:var(--muted)}
+  .small{font-size:11.5px}
+  .tiny{font-size:10px}
+  .gold{color:var(--gold)} .good{color:var(--good)} .bad{color:var(--bad)} .info{color:var(--info)}
+  .num{font-variant-numeric:tabular-nums}
+  hr{border:none; border-top:1px solid var(--line); margin:10px 0}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:5px;
+    background:linear-gradient(180deg,#2a3346,#202838); color:var(--text);
+    border:1px solid #3b475e; border-radius:10px; padding:9px 12px; font-size:12px; font-weight:700;
+    cursor:pointer; transition:.12s; text-align:center; min-height:38px;
+  }
+  .btn:active:not(:disabled){transform:scale(.97)}
+  .btn:disabled{opacity:.42; cursor:not-allowed}
+  .btn.gold{background:linear-gradient(180deg,#ffd479,#e8a52e); color:#211603; border-color:#ffdc8f}
+  .btn.green{background:linear-gradient(180deg,#3ddc84,#1f9e57); color:#04140a; border-color:#6cf0a6}
+  .btn.blue{background:linear-gradient(180deg,#63b3ff,#2b71c8); color:#03101f; border-color:#8fcaff}
+  .btn.purple{background:linear-gradient(180deg,#c084fc,#7c3aed); color:#12061f; border-color:#d8b4fe}
+  .btn.ghost{background:transparent; border-color:var(--line2); color:#b9c5d8}
+  .btn.danger{background:linear-gradient(180deg,#ff7b7b,#c93a3a); color:#210606; border-color:#ff9d9d}
+  .btn.sm{padding:6px 9px; font-size:10.5px; border-radius:8px; min-height:30px}
+  .btn.lg{padding:12px 16px; font-size:13px; border-radius:12px; min-height:44px}
+  .btn.block{width:100%}
+
+  .chip{display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:20px; font-size:10px;
+    background:#1d2534; border:1px solid var(--line); color:#b9c5d8; font-weight:700}
+  .chip.gold{background:rgba(255,204,102,.12); border-color:#5c4a22; color:var(--gold)}
+  .chip.good{background:rgba(87,217,138,.1); border-color:#245c3a; color:var(--good)}
+  .chip.bad{background:rgba(255,107,107,.1); border-color:#5c2b2b; color:var(--bad)}
+  .chip.info{background:rgba(111,183,255,.1); border-color:#274863; color:var(--info)}
+  .chip.purple{background:rgba(192,132,252,.12); border-color:#4a2f66; color:#d8b4fe}
+
+  /* gems */
+  .gem{display:inline-block; width:var(--s,36px); height:var(--s,36px); flex:none;
+    background:
+      radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 34%),
+      radial-gradient(circle at 70% 78%, rgba(255,255,255,.35), rgba(255,255,255,0) 40%),
+      conic-gradient(from 210deg, var(--g1), var(--g2) 22%, var(--g3) 46%, var(--g2) 68%, var(--g1) 88%, var(--g2));
+    clip-path:polygon(50% 0%, 88% 13%, 100% 50%, 87% 88%, 50% 100%, 13% 88%, 0% 50%, 12% 13%);
+    filter:drop-shadow(0 0 6px var(--glow, rgba(192,132,252,.45)));
+  }
+
+  .stone-card{background:linear-gradient(180deg,#1a2130,#151a26); border:1px solid var(--line); border-radius:12px; padding:10px}
+  .stone-card .head{display:flex; align-items:center; gap:8px; margin-bottom:7px}
+  .stone-card .nm{font-weight:700; font-size:12.5px}
+  .stone-card .meta{font-size:10.5px; color:var(--muted); line-height:1.4}
+  .chips{display:flex; flex-wrap:wrap; gap:4px; margin:7px 0}
+  .chunk{cursor:pointer; padding:5px 9px; border-radius:8px; font-size:11px; font-weight:700;
+    background:#1b2331; border:1px solid #2f3a4d; color:#c9d3e2; transition:.1s; user-select:none; min-height:30px;
+    display:inline-flex; align-items:center}
+  .chunk.sel{background:rgba(255,204,102,.16); border-color:#8a6d2c; color:var(--gold)}
+
+  .list-item{display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:11px;
+    background:#161c28; border:1px solid var(--line); margin-bottom:6px}
+  .list-item .grow{flex:1; min-width:0}
+  .list-item .t{font-size:12px; font-weight:700}
+  .list-item .s{font-size:10.5px; color:var(--muted); margin-top:1px}
+
+  .stat-tile{background:linear-gradient(180deg,#1a2130,#141a26); border:1px solid var(--line); border-radius:11px; padding:9px}
+  .stat-tile .k{font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em}
+  .stat-tile .v{font-size:14px; font-weight:800; margin-top:2px}
+
+  .hero{position:relative; overflow:hidden; border-radius:14px; padding:14px; margin-bottom:11px;
+    background:
+      radial-gradient(500px 180px at 85% 0%, rgba(192,132,252,.16), transparent 60%),
+      radial-gradient(420px 200px at 10% 100%, rgba(255,204,102,.12), transparent 60%),
+      linear-gradient(160deg,#1b2231,#12161f);
+    border:1px solid var(--line)}
+  .hero h1{font-size:19px; margin-bottom:5px}
+  .hero p{margin:0 0 11px; color:#b7c2d6; font-size:12px; line-height:1.55}
+  .hero .glowline{position:absolute; inset:auto -20% -60% -20%; height:170px; background:radial-gradient(ellipse at center, rgba(255,204,102,.14), transparent 70%); pointer-events:none}
+
+  .slot{min-height:118px; border-radius:12px; border:1px dashed #33405a; background:rgba(15,19,27,.6);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:8px; text-align:center}
+  .slot.filled{border-style:solid; border-color:#4a5872; background:linear-gradient(180deg,#1a2231,#141a26)}
+
+  .tabs-inline{display:flex; gap:5px; margin-bottom:10px; flex-wrap:wrap}
+  .tabs-inline .ti{padding:7px 11px; border-radius:9px; background:#161c28; border:1px solid var(--line);
+    font-size:11px; font-weight:700; cursor:pointer; color:#aab6c9; min-height:34px; display:inline-flex; align-items:center; gap:4px}
+  .tabs-inline .ti.active{background:rgba(255,204,102,.12); border-color:#5c4a22; color:var(--gold)}
+
+  .bar{height:7px; border-radius:5px; background:#0d1118; border:1px solid #26303f; overflow:hidden}
+  .bar i{display:block; height:100%; background:linear-gradient(90deg,#8b5cf6,#c084fc)}
+  .bar.gold i{background:linear-gradient(90deg,#ffb020,#ffe08a)}
+  .bar.green i{background:linear-gradient(90deg,#22c55e,#86efac)}
+
+  /* toasts */
+  #toasts{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(var(--nav-h) + 8px);
+    display:flex; flex-direction:column; gap:5px; z-index:100; pointer-events:none; width:min(90vw,330px); align-items:center}
+  .toast{padding:7px 12px; border-radius:10px; font-size:11px; font-weight:700; border:1px solid var(--line2);
+    background:rgba(21,26,36,.98); box-shadow:0 8px 22px rgba(0,0,0,.45); animation:toastIn .2s ease; backdrop-filter:blur(6px);
+    text-align:center; max-width:100%}
+  .toast.good{border-color:#2c6b46; color:#a9f3c6}
+  .toast.bad{border-color:#6b2c2c; color:#ffb4b4}
+  .toast.stone{border-color:#4a3a6b; color:#dcc6ff}
+  .toast.money{border-color:#6b5a2c; color:#ffe3a3}
+  @keyframes toastIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+
+  /* modal / sheet */
+  #modalBack{position:fixed; inset:0; background:rgba(4,6,10,.76); backdrop-filter:blur(4px); z-index:90;
+    display:none; align-items:flex-end; justify-content:center; padding:0}
+  #modalBack.open{display:flex}
+  .modal{width:min(560px,100%); max-height:88vh; overflow-y:auto; border-radius:18px 18px 0 0; padding:18px 16px calc(18px + var(--safe-b));
+    background:linear-gradient(180deg,#1c2434,#141a26); border:1px solid #35415a; border-bottom:none;
+    box-shadow:0 -14px 50px rgba(0,0,0,.6); animation:sheetIn .24s cubic-bezier(.2,.9,.3,1); -webkit-overflow-scrolling:touch}
+  @keyframes sheetIn{from{transform:translateY(40px); opacity:.6} to{transform:none; opacity:1}}
+  .modal h2{margin-top:0}
+  .modal .foot{display:flex; gap:8px; justify-content:stretch; margin-top:14px; flex-wrap:wrap}
+  .modal .foot .btn{flex:1}
+
+  .pack{position:relative; border-radius:12px; padding:12px 8px; text-align:center;
+    background:linear-gradient(180deg,#232b3c,#181e2b); border:1px solid #3a465c; cursor:pointer; transition:.12s}
+  .pack:active{transform:scale(.97)}
+  .pack .tag{position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:9px; font-weight:800;
+    padding:2px 7px; border-radius:20px; background:linear-gradient(90deg,#ffd479,#e8a52e); color:#241804; white-space:nowrap}
+  .pack .coins{font-size:16px; font-weight:900; color:var(--gold)}
+  .pack .rub{font-size:12px; color:#cdd7e6; margin-top:2px}
+  .pack .bonus{font-size:9.5px; color:var(--good); margin-top:2px; min-height:12px}
+
+  .mine-card{position:relative; border-radius:13px; overflow:hidden; border:1px solid var(--line);
+    background:linear-gradient(180deg,#1a2231,#12171f); padding:12px}
+  .mine-card.locked{opacity:.75}
+  .mine-card .glow{position:absolute; inset:-40% -20% auto -20%; height:120px; pointer-events:none}
+  .mine-card .nm{font-size:13px; font-weight:800}
+  .mine-card .th{position:absolute; top:0; left:0; right:0; height:3px}
+
+  .sword-big{font-size:26px; filter:drop-shadow(0 0 8px rgba(255,204,102,.5))}
+  .kbd{display:inline-block; padding:1px 6px; border-radius:5px; background:#0e131b; border:1px solid #35415a;
+    font-size:10px; font-weight:700; color:#c2cee0}
+  .warn{color:#ffd166; font-size:11px}
+  .center{text-align:center}
+  .scrollx{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -11px; padding:0 11px}
+  .nowrap{white-space:nowrap}
+  table{width:100%; border-collapse:collapse; font-size:11px}
+  th{font-size:9.5px; color:var(--muted); text-align:left; font-weight:700; padding:5px 4px}
+  td{padding:6px 4px; border-top:1px solid #232c3d}
+
+  /* desktop notice */
+  #desktopNote{position:fixed; left:50%; transform:translateX(-50%); top:calc(8px + var(--safe-t)); z-index:150;
+    background:rgba(20,26,38,.97); border:1px solid #3a465c; border-radius:12px; padding:9px 13px; font-size:11px;
+    color:#c7d1e2; display:none; align-items:center; gap:8px; box-shadow:0 10px 30px rgba(0,0,0,.5); max-width:94vw}
+  #desktopNote.show{display:flex}
+  #desktopNote button{background:none; border:none; color:var(--muted); font-size:15px; cursor:pointer; padding:0 2px}
+
+  @media (min-width:560px){
+    .slot{aspect-ratio:1; min-height:0}
+    .g2{grid-template-columns:repeat(2,1fr)}
+    .g3{grid-template-columns:repeat(2,1fr)}
+    .g4{grid-template-columns:repeat(2,1fr)}
+    header#hud{padding-top:9px; padding-bottom:9px}
+    .stat{font-size:12.5px; padding:6px 9px}
+    .brand{display:block}
+    .stat.tickets{display:flex}
+    nav#tabs{grid-template-columns:repeat(10,1fr); gap:4px}
+    .tab{font-size:9px; min-height:50px}
+    :root{--nav-h:calc(66px + var(--safe-b))}
+  }
+  @media (min-width:900px){
+    .g3{grid-template-columns:repeat(3,1fr)}
+    .g4{grid-template-columns:repeat(4,1fr)}
+    .modal{border-radius:18px; margin-bottom:16vh; animation:modalIn .2s ease}
+    #modalBack{align-items:center; padding:18px}
+    @keyframes modalIn{from{opacity:0; transform:scale(.97)} to{opacity:1; transform:none}}
+  }
+  @media (max-width:380px){
+    .stat{font-size:10.5px; padding:4px 6px}
+    .stat.level{display:none}
+    .ebar{width:40px}
+    #joystick{width:100px; height:100px}
+    #turnPad{bottom:calc(24px + var(--safe-b))}
+    .turn{width:42px; height:42px; font-size:18px}
+    #swingBtn{width:78px; height:78px; font-size:30px}
+    #minimap{width:70px; height:70px}
+    #mineBagChip{top:calc(132px + var(--safe-t))}
+  }
+  @media (orientation:landscape) and (max-height:520px){
+    :root{--nav-h:calc(56px + var(--safe-b))}
+    nav#tabs{grid-template-columns:repeat(10,1fr)}
+    .tab{min-height:44px; font-size:8.5px}
+    .tab .ic{font-size:14px}
+    #joystick{width:96px; height:96px; left:10px; bottom:calc(10px + var(--safe-b))}
+    #joyKnob{width:42px; height:42px; margin:-21px 0 0 -21px}
+    #swingBtn{width:74px; height:74px; font-size:29px; bottom:calc(14px + var(--safe-b)); right:12px}
+    #minimap{width:66px; height:66px; top:50px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud">
+    <div class="brand">⛰️ КАМЕННЫЙ ПУТЬ</div>
+    <div class="hud-row">
+      <div class="stat money" id="hudMoney">0 ₽</div>
+      <div class="stat coins" id="hudCoins">0 🪙</div>
+      <div class="stat tickets" id="hudTickets">0 🎟️</div>
+      <div class="stat energy" id="hudEnergy">
+        <span class="ico">⚡</span><b id="enVal">100</b>
+        <div class="ebar"><i id="enBar" style="width:100%"></i></div>
+      </div>
+      <div class="stat level" id="hudLevel">
+        <span>Ур. <b id="lvlVal">1</b></span>
+        <div class="xbar"><i id="xpBar" style="width:0%"></i></div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="screen-city" class="screen active">
+      <div class="wrap" id="cityRoot"></div>
+    </section>
+
+    <section id="screen-mine" class="screen">
+      <div id="mineWrap">
+        <canvas id="mineCanvas"></canvas>
+
+        <div id="mineHud">
+          <div class="mh-left">
+            <button id="mineExit" data-exit-mine aria-label="Выйти из шахты">←</button>
+          </div>
+          <div class="mh-center">
+            <div id="mineEnergyChip">⚡ <b id="enVal2">100</b>/<span id="enMax2">100</span><div class="ebar"><i id="enBar2" style="width:100%"></i></div></div>
+            <div id="mineName">Шахта</div>
+          </div>
+        </div>
+
+        <canvas id="minimap" width="84" height="84"></canvas>
+        <div id="mineBagChip">🎒 <span id="mineBag">0</span>/80</div>
+        <div id="mineFeed"></div>
+
+        <div id="mineHint">
+          <div class="hint-box">
+            <div style="font-size:20px; margin-bottom:3px">⛏️</div>
+            <b>Идти:</b> джойстик слева (стрелки или палец)<br>
+            <b>Повернуть голову:</b> тяните палец по экрану справа от джойстика или жмите ↺ ↻<br>
+            <b>Удар:</b> короткий тап по сцене или кнопка ⛏️
+          </div>
+        </div>
+
+        <div id="turnPad">
+          <button id="turnLeft" class="turn" aria-label="повернуть влево">↺</button>
+          <button id="turnRight" class="turn" aria-label="повернуть вправо">↻</button>
+        </div>
+
+        <div id="joystick">
+          <div id="joyKnob"></div>
+          <button class="dpad up"    data-dir="f" aria-label="вперёд">▲</button>
+          <button class="dpad down"  data-dir="b" aria-label="назад">▼</button>
+          <button class="dpad left"  data-dir="l" aria-label="влево">◀</button>
+          <button class="dpad right" data-dir="r" aria-label="вправо">▶</button>
+        </div>
+        <button id="swingBtn" aria-label="Ударить киркой">⛏️</button>
+      </div>
+    </section>
+
+    <section id="screen-tab" class="screen">
+      <div class="wrap" id="tabRoot"></div>
+    </section>
+  </main>
+
+  <nav id="tabs"></nav>
+</div>
+
+<div id="toasts"></div>
+<div id="modalBack"><div class="modal" id="modalBox"></div></div>
+<div id="desktopNote">
+  📱 Игра сделана для телефона и Telegram — этот экран лучше открыть с iPhone/iPad или в мини-приложении
+  <button onclick="this.parentNode.classList.remove('show')">✕</button>
+</div>
+
+<script>
+  /* Внешний SDK Telegram грузим только когда он реально нужен и доступен.
+     Это убирает сетевые ошибки в песочнице предпросмотра и при открытии файла. */
+  (function(){
+    var host = location.hostname;
+    var isTelegramHost = /telegram\.(org|me)$/.test(host) || /(^|\.)telegram\.org$/.test(host);
+    var isLocal = host === 'localhost' || host === '127.0.0.1' || location.protocol === 'file:';
+    var wantSdk = !location.protocol.startsWith('file:') && !isLocal;
+    var inject = function(){
+      if (window.__tgSdkRequested) return;
+      window.__tgSdkRequested = true;
+      var s = document.createElement('script');
+      s.src = 'https://telegram.org/js/telegram-web-app.js';
+      s.async = true;
+      s.onload = function(){ if (window.onTelegramSdkReady) window.onTelegramSdkReady(); };
+      document.head.appendChild(s);
+    };
+    if (window.Telegram && window.Telegram.WebApp) return;      // уже есть
+    if (isTelegramHost) return inject();                         // точно Telegram
+    if (!wantSdk) return;                                        // файл/локально — не грузим
+    // иначе — пробуем тихо и глушим сетевые ошибки
+    try{
+      var s = document.createElement('script');
+      s.src = 'https://telegram.org/js/telegram-web-app.js';
+      s.async = true;
+      s.onerror = function(){};
+      s.onload = function(){ if (window.onTelegramSdkReady) window.onTelegramSdkReady(); };
+      document.head.appendChild(s);
+    }catch(e){}
+  })();
+</script>
+<script>
+(function(){
+"use strict";
+/* ==================== js/data.js ==================== */
+/* =========================================================
+   КАМЕННЫЙ ПУТЬ — игровые данные
+   ========================================================= */
+'use strict';
+
+const GAME = {
+  COIN_RUB: 12.5,            // 1 монета ≈ 12.5 ₽ (10–15 ₽ по задумке)
+  START_MONEY: 300,
+  START_ENERGY: 100,
+  BASE_ENERGY: 100,
+  INVENTORY_CAP: 80,
+  ENERGY_REGEN_SEC: 120,     // +1 энергии каждые 2 минуты
+  ORE_REGEN_SEC: 75,         // +1 руды (кроме алмазной) за жилу на поверхности
+  DIAMOND_REGEN_SEC: 180,    // +1 алмазной руды, если открыта Кимберли
+  MUSEUM_BONUS_PCT: 0.02,    // +2% к ценам продажи за каждый экспонат
+  MUSEUM_TICKET: 15,         // билетов за уникальный экспонат
+  MUSEUM_TICKETS_MAX_RATE: 2,// макс. билетов в секунду
+  COUNTER_PRICE: 2500,       // касса/витрина: +1 билет/с
+  LAMP_COST: 120,
+  PICKAXE_BASE: 1,
+  SELL_GOLD_TIER: 35,        // при каком уровне шахты золото можно сдавать в скупку
+};
+
+/* ---------- КАМНИ ----------
+   tier: редкость, crystal: true — даёт кристалл при огранке
+   parts: каких штук хватает на одну огранку
+   sell: базовая цена кристалла-сырца (без огранки)                  */
+const STONE_TYPES = {
+  amethyst: { name:'Аметист',      icon:'💜', tier:1, crystal:true,  parts:3, sell:10, grade:{min:8,  max:28,  pmin:6,  pmax:20} },
+  topaz:    { name:'Топаз',        icon:'🧡', tier:2, crystal:true,  parts:3, sell:16, grade:{min:12, max:38,  pmin:9,  pmax:26} },
+  emerald:  { name:'Изумруд',      icon:'💚', tier:3, crystal:true,  parts:2, sell:45, grade:{min:28, max:78,  pmin:20, pmax:55} },
+  sapphire: { name:'Сапфир',       icon:'💙', tier:4, crystal:true,  parts:2, sell:70, grade:{min:42, max:112, pmin:30, pmax:78} },
+  ruby:     { name:'Рубин',        icon:'❤️', tier:5, crystal:true,  parts:2, sell:110,grade:{min:62, max:160, pmin:44, pmax:110} },
+  diamond:  { name:'Алмаз',        icon:'🤍', tier:6, crystal:true,  parts:1, sell:190,grade:{min:95, max:240, pmin:70, pmax:170} },
+  star:     { name:'Звёздный камень', icon:'🌠', tier:8, crystal:true, parts:1, sell:420, grade:{min:180, max:420, pmin:140, pmax:300} },
+};
+
+/* ---------- СЫРЬЁ (руды + расходники) ---------- */
+const MATERIALS = {
+  iron:    { name:'Железная руда',   icon:'⛏️', sell:5,  tier:1 },
+  silver:  { name:'Серебряная руда', icon:'🥈', sell:12, tier:2 },
+  gold:    { name:'Золотая руда',    icon:'🥇', sell:20, tier:3 },
+  coal:    { name:'Уголь',           icon:'🪨', sell:3,  tier:0 },
+  quartz:  { name:'Кварц',           icon:'🔮', sell:6,  tier:1 },
+  geode:   { name:'Агатовая жеода',  icon:'🌀', sell:10, tier:1 },
+  focus:   { name:'Кристалл концентрации', icon:'🧿', sell:0, tier:0 },
+};
+
+/* ---------- ПРЕДМЕТЫ КРАФТА ---------- */
+const ITEM_TYPES = {
+  ring:    { name:'Кольцо',  icon:'💍', part:'ring',    mult:2.4 },
+  earring: { name:'Серьги',  icon:'🦻', part:'earring', mult:1.9 },
+  bracelet:{ name:'Браслет', icon:'📿', part:'bracelet',mult:2.0 },
+  pendant: { name:'Кулон',   icon:'🔱', part:'pendant', mult:2.6 },
+  crown:   { name:'Корона',  icon:'👑', part:'crown',   mult:3.2 },
+};
+
+const QUALITY = [
+  { id:'common',  name:'Обычный',      color:'#b9c2d0', mult:1.00 },
+  { id:'fine',    name:'Хороший',      color:'#57d98a', mult:1.25 },
+  { id:'rare',    name:'Редкий',       color:'#5aa8ff', mult:1.55 },
+  { id:'epic',    name:'Эпический',    color:'#c77dff', mult:1.95 },
+  { id:'legend',  name:'Легендарный',  color:'#ffb347', mult:2.50 },
+];
+
+const SWORDS = {
+  iron:    { name:'Железный клинок',   icon:'🗡️', atk:8,  mats:{iron:8, coal:4},        cost:40 },
+  silver:  { name:'Серебряный клинок', icon:'⚔️', atk:16, mats:{silver:7, iron:3, coal:5}, cost:120 },
+  gold:    { name:'Золочёный клинок',  icon:'🗡️', atk:26, mats:{gold:6, silver:2, coal:6}, cost:280 },
+  malachite:{name:'Малахитовый тесак', icon:'⚔️', atk:34, mats:{emerald:2, iron:6, coal:8}, cost:520 },
+  gem:     { name:'Самоцветный рапир', icon:'⚔️', atk:48, mats:{ruby:2, sapphire:1, coal:10}, cost:900 },
+  diamond: { name:'Алмазный двуруч',   icon:'🗡️', atk:72, mats:{diamond:2, gold:4, coal:12}, cost:1600 },
+  star:    { name:'Звёздный экскалибур', icon:'🌟', atk:105, mats:{star:2, diamond:1, coal:15}, cost:3200 },
+};
+const SWORD_QUALITY_BASE = 0.30; // шанс не-обычного, + бонус от навыка
+
+/* ---------- ЛОКАТИИ / ШАХТЫ ---------- */
+const HOSTS = {
+  amethyst: { name:'Штольня «Аметистовая»', short:'Аметистовая', theme:'purple', unlock:0,   yield:{amethyst:0.60, quartz:0.40}, diamonds:false, lampReq:0 },
+  topaz:    { name:'Рудник «Золотая жила»', short:'Золотая жила', theme:'gold',   unlock:800, yield:{topaz:0.55, gold:0.30, coal:0.15}, diamonds:false, lampReq:0 },
+  emerald:  { name:'Изумрудный карьер',     short:'Изумрудный', theme:'green',  unlock:2600,yield:{emerald:0.50, silver:0.30, quartz:0.20}, diamonds:false, lampReq:0 },
+  sapphire: { name:'Сапфировые копи',       short:'Сапфировые', theme:'blue',   unlock:7000,yield:{sapphire:0.45, ruby:0.08, gold:0.22, iron:0.25}, diamonds:false, lampReq:0 },
+  kimberly: { name:'ВЕЛИКАЯ ДЫРА · Кимберли', short:'Великая Дыра', theme:'ice', unlock:18000, yield:{diamond:0.30, star:0.03, emerald:0.12, sapphire:0.12, coal:0.18, geode:0.25}, diamonds:true, lampReq:2 },
+};
+
+const KIMBERLY_SECTORS = [
+  { name:'Верхний уступ',   mult:1.0 },
+  { name:'Синяя земля',     mult:1.4 },
+  { name:'Серпантинный склон', mult:1.8 },
+  { name:'Глубина 340 м',   mult:2.3 },
+  { name:'Разлом «Сердце дыры»', mult:3.0 },
+];
+
+/* ---------- МУЗЕЙНЫЕ ЭКСПОНАТЫ (цели, дают награду + бонус к ценам) ---------- */
+const EXHIBITS = [
+  { id:'first',   name:'Первый кристалл',            desc:'Откройте любой кристалл огранкой',                 money:150,  icon:'💎' },
+  { id:'amethyst_giant', name:'Гигант аметиста',      desc:'Найдите аметист размером 500+ карат',              money:300,  icon:'💜' },
+  { id:'topaz_giant',    name:'Солнечный топаз',      desc:'Найдите топаз размером 800+ карат',                money:500,  icon:'🧡' },
+  { id:'emerald_giant',  name:'Изумрудный колосс',    desc:'Найдите изумруд размером 1 000+ карат',            money:900,  icon:'💚' },
+  { id:'sapphire_giant', name:'Сапфир бездны',        desc:'Найдите сапфир размером 1 500+ карат',             money:1400, icon:'💙' },
+  { id:'ruby_giant',     name:'Кровавый рубин',       desc:'Найдите рубин размером 2 500+ карат',              money:2200, icon:'❤️' },
+  { id:'diamond_big',    name:'Алмаз Великой Дыры',   desc:'Найдите алмаз размером 3 000+ карат',              money:5000, icon:'🤍' },
+  { id:'diamond_mega',   name:'Звезда Кимберли',      desc:'Найдите алмаз размером 6 000+ карат',              money:12000, icon:'🌟' },
+  { id:'jewel_first',    name:'Первая работа',        desc:'Создайте любое украшение',                         money:120,  icon:'💍' },
+  { id:'jewel_legend',   name:'Легенда ювелира',      desc:'Создайте украшение легендарного качества',         money:2500, icon:'👑' },
+  { id:'sword_first',    name:'Кузнец-самоучка',      desc:'Выкуйте первый меч',                               money:200,  icon:'🗡️' },
+  { id:'sword_diamond',  name:'Алмазный двуруч',      desc:'Выкуйте Алмазный двуруч',                          money:3500, icon:'⚔️' },
+  { id:'cards',          name:'Полный каталог',       desc:'Соберите карточки всех 6 типов камней',            money:600,  icon:'📇' },
+  { id:'quest_5',        name:'Надёжный поставщик',   desc:'Выполните 5 заказов',                              money:700,  icon:'📦' },
+  { id:'miner_10',       name:'Мастер кирки',         desc:'Достигните 10 уровня шахтёра',                     money:800,  icon:'⛏️' },
+  { id:'hole_master',    name:'Хозяин Великой Дыры',  desc:'Достигните 15 уровня шахтёра после открытия Кимберли', money:8000, icon:'🕳️' },
+];
+
+/* ---------- ДОСТИЖЕНИЯ ---------- */
+const ACHIEVEMENTS = [
+  { id:'a_crystals', name:'Огранщик',        desc:'Огранить 10 кристаллов',        money:300,  cond:s=>s.stats.graded>=10 },
+  { id:'a_jewels',   name:'Ювелир',          desc:'Создать 10 украшений',          money:500,  cond:s=>s.stats.jewelry>=10 },
+  { id:'a_money',    name:'Первые 10 тысяч', desc:'Накопить 10 000 ₽',             money:1000, cond:s=>s.stats.maxMoney>=10000 },
+  { id:'a_kimberly', name:'Покоритель Дыры', desc:'Открыть Великую Дыру',          money:3000, cond:s=>s.unlocked.includes('kimberly') },
+  { id:'a_museum',   name:'Меценат',         desc:'Выставить 5 экспонатов',        money:1500, cond:s=>s.museum.length>=5 },
+  { id:'a_swords',   name:'Оружейник',       desc:'Выковать 5 мечей',              money:800,  cond:s=>s.stats.swords>=5 },
+  { id:'a_orders',   name:'Исполнитель',     desc:'Выполнить 10 заказов',          money:1200, cond:s=>s.stats.orders>=10 },
+  { id:'a_energy',   name:'Трудоголик',      desc:'Истратить 500 энергии',         money:400,  cond:s=>s.stats.energySpent>=500 },
+];
+
+/* ---------- ДОНАТ-МАГАЗИН (курс ≈ 12.5 ₽ за монету) ---------- */
+const COIN_PACKS = [
+  { coins:100,  price:149,  bonus:0,  tag:'' },
+  { coins:250,  price:349,  bonus:25, tag:'Хит' },
+  { coins:500,  price:690,  bonus:75, tag:'Выгодно' },
+  { coins:1200, price:1490, bonus:250,tag:'Лучшая цена' },
+  { coins:3000, price:3490, bonus:900,tag:'Кит' },
+];
+
+const SHOP_ITEMS = [
+  { id:'focus',   name:'Кристалл концентрации', icon:'🧿', currency:'coins', price:3, desc:'+10 энергии мгновенно (и +10 к максимуму за каждое 10-е использование нет — просто энергия)' },
+  { id:'lamp',    name:'Лампа шахтёра',         icon:'⛑️', currency:'money', price:120, desc:'+30% к шансу находок в каждой шахте (макс. 3)' },
+  { id:'counter', name:'Касса музея',           icon:'🏛️', currency:'money', price:2500, desc:'+1 билет в секунду навсегда' },
+  { id:'vip',     name:'VIP-статус',            icon:'⭐', currency:'money', price:5000, desc:'+20% к ценам продажи и +1 к удаче' },
+];
+const LAMP_MAX = 3;
+
+/* ---------- ПРОЧИЕ ЦЕНЫ ---------- */
+const GRADING_FEE_T3_PLUS = 15;     // за огранку камней тира 3+
+const KIMBERLY_SECTOR_TICKETS = 200; // билеты за открытие сектора Дыры (каждый следующий)
+const MIN_LAMP_TICKETS = 0;          // оставим бесплатный проход для первых уровней
+
+function fmtMoney(n){ return Math.round(n).toLocaleString('ru-RU') + ' ₽'; }
+function fmtCoins(n){ return Math.round(n).toLocaleString('ru-RU') + ' 🪙'; }
+
+/* ==================== js/core.js ==================== */
+/* =========================================================
+   КАМЕННЫЙ ПУТЬ — ядро: состояние, экономика, логика
+   ========================================================= */
+'use strict';
+
+const SAVE_KEY = 'kamenny_put_v1';
+const SAVE_VERSION = 1;
+
+/* ---------- утилиты ---------- */
+let _uid = 1;
+function uid(){ return (_uid++).toString(36) + Math.random().toString(36).slice(2,6); }
+function rand(){ return Math.random(); }
+function randInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
+function chance(p){ return Math.random() < p; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function round1(v){ return Math.round(v*10)/10; }
+
+function newState(){
+  return {
+    v: SAVE_VERSION,
+    money: GAME.START_MONEY,
+    coins: 0,
+    tickets: 0,
+    energy: GAME.START_ENERGY,
+    maxEnergy: GAME.BASE_ENERGY,
+    level: 1,
+    xp: 0,
+    luck: 0,
+    lamps: 0,
+    counters: 0,
+    vip: false,
+    unlocked: ['amethyst'],
+    sector: 0,               // текущий сектор Великой Дыры
+    sectorOpen: 0,           // сколько секторов открыто (0..5)
+    inventory: {},           // key -> [ {id,size,tint} ]
+    materials: { iron: 0, silver: 0, gold: 0, coal: 0, quartz: 0, geode: 0, focus: 0 },
+    crystals: [],            // огранённые кристаллы
+    jewelry: [],
+    swords: [],
+    museum: [],              // выставленные кристаллы (id из пула, отдельные объекты)
+    rewardsDone: [],         // id полученных наград коллекции
+    achievements: [],
+    orders: [],
+    orderCooldownAt: 0,
+    stats: { mined:0, graded:0, jewelry:0, swords:0, orders:0, energySpent:0, maxMoney:GAME.START_MONEY, sold:0 },
+    market: {},              // key -> множитель
+    marketAt: 0,
+    lastTick: Date.now(),
+    seenCards: {},           // карточки камней
+    introDone: false,
+    sfx: true,
+  };
+}
+
+let state = newState();
+
+/* ---------- производные ---------- */
+function xpToNext(){ return Math.round(70 + state.level*55); }
+function museumBonus(){ return 1 + state.museum.length * GAME.MUSEUM_BONUS_PCT; }
+function sellBonus(){ return museumBonus() * (state.vip ? 1.2 : 1); }
+function ticketsRate(){
+  const base = state.museum.length > 0 ? Math.min(GAME.MUSEUM_TICKETS_MAX_RATE, 0.5 + state.museum.length*0.5) : 0;
+  return base + state.counters; // кассы добавляют +1/с
+}
+function maxEnergyNow(){ return GAME.BASE_ENERGY + (state.level-1)*5; }
+function luckNow(){ return state.luck + (state.vip?1:0) + Math.floor(state.level/5) + (state.lamps*0.35); }
+function stonePerSwing(locKey){
+  // сколько ударов кирки нужно в среднем на находку
+  const base = { amethyst: 2.6, topaz: 3.2, emerald: 3.8, sapphire: 4.4, kimberly: 5.2 };
+  return base[locKey] || 3;
+}
+
+/* ---------- сохранение ---------- */
+function save(){
+  try {
+    state.lastTick = Date.now();
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  } catch(e){ /* localStorage может быть недоступен */ }
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s || typeof s !== 'object') return false;
+    // мягкое слияние с новой схемой
+    const base = newState();
+    state = Object.assign(base, s);
+    state.stats = Object.assign(base.stats, s.stats||{});
+    state.materials = Object.assign(base.materials, s.materials||{});
+    state.market = s.market||{};
+    state.inventory = s.inventory||{};
+    state.crystals = s.crystals||[];
+    state.jewelry = s.jewelry||[];
+    state.swords = s.swords||[];
+    state.museum = s.museum||[];
+    state.unlocked = s.unlocked && s.unlocked.length ? s.unlocked : ['amethyst'];
+    if (!state.unlocked.includes('amethyst')) state.unlocked.unshift('amethyst');
+    state.rewardsDone = s.rewardsDone||[];
+    state.achievements = s.achievements||[];
+    state.orders = s.orders||[];
+    state.seenCards = s.seenCards||{};
+    _uid = Math.max(_uid, 7);
+    return true;
+  } catch(e){ return false; }
+}
+function hardReset(){
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+  state = newState();
+  state.introDone = false;
+}
+
+/* ---------- прогресс / награды ---------- */
+function addXP(n){
+  state.xp += Math.max(0, Math.round(n));
+  let ups = 0;
+  while (state.xp >= xpToNext()){
+    state.xp -= xpToNext();
+    state.level++;
+    ups++;
+    state.energy = maxEnergyNow();
+    if (typeof toast === 'function') toast(`⬆️ Уровень ${state.level}! Энергия восстановлена`, 'good');
+  }
+  if (ups) { if (typeof sfxLevel === 'function') sfxLevel(); }
+  checkAch();
+}
+function addMoney(n, reason){
+  state.money += n;
+  state.stats.maxMoney = Math.max(state.stats.maxMoney, state.money);
+  if (reason && typeof toast === 'function') toast(`+${fmtMoney(n)} ${reason}`, 'money');
+  checkAch();
+}
+function spendMoney(n){
+  if (state.money < n) return false;
+  state.money -= n;
+  return true;
+}
+function addTickets(n){ state.tickets += n; }
+
+/* ---------- инвентарь камней ---------- */
+function invCount(){ return Object.keys(state.inventory).reduce((a,k)=>a + (state.inventory[k]||[]).length, 0); }
+function invCapBonus(){ return 0; } // можно расширять позже
+function inventoryFull(){ return invCount() >= GAME.INVENTORY_CAP; }
+
+function addStone(key, size, opts){
+  const t = STONE_TYPES[key];
+  if (!t) return null;
+  if (!state.inventory[key]) state.inventory[key] = [];
+  if (inventoryFull()){
+    if (typeof toast === 'function') toast('🎒 Инвентарь полон! Продайте камни в скупке', 'bad');
+    return null;
+  }
+  const st = { id:uid(), size: Math.round(size*10)/10, tint: randInt(-18,18) };
+  state.inventory[key].push(st);
+  state.seenCards[key] = true;
+  if (opts && opts.silent !== true && typeof toast === 'function'){
+    toast(`${t.icon} ${t.name} · ${st.size} кт`, 'stone');
+  }
+  checkExhibits();
+  if (typeof sfxFind === 'function') sfxFind(t.tier);
+  return st;
+}
+
+function addMaterial(key, amount){
+  if (!(key in state.materials)) return 0;
+  const n = Math.max(0, Math.floor(amount));
+  state.materials[key] = (state.materials[key]||0) + n;
+  return n;
+}
+
+/* ---------- ЦЕНЫ ---------- */
+const PRICE_PER_CARAT = { amethyst:0.9, topaz:1.3, emerald:2.6, sapphire:4.0, ruby:7.0, diamond:12, star:22 };
+
+function marketMult(key){
+  const m = state.market[key];
+  return typeof m === 'number' ? m : 1;
+}
+function stoneValue(key, size, qmult, isCrystal){
+  const p = (PRICE_PER_CARAT[key]||1) * Math.pow(size, 0.93);
+  const t = STONE_TYPES[key];
+  let v = p * (isCrystal ? 1.0 : 0.72);
+  if (qmult) v *= qmult;
+  v *= marketMult(key);
+  return Math.max(1, Math.round(v));
+}
+function materialPrice(key){
+  const m = MATERIALS[key];
+  return Math.round((m.sell||1) * marketMult(key));
+}
+function crystalPrice(c){ return Math.round(stoneValue(c.key, c.carat, c.qmult, true) * sellBonus()); }
+function jewelryPrice(j){
+  const base = stoneValue(j.key, j.carat, j.qmult, true) * ITEM_TYPES[j.type].mult;
+  return Math.round(base * j.qmult2 * sellBonus());
+}
+
+/* ---------- ДОБЫЧА ---------- */
+function swing(locKey){
+  const host = HOSTS[locKey];
+  if (state.energy < 1) return { type:'noenergy' };
+  state.energy -= 1;
+  state.stats.energySpent++;
+  state.stats.mined++;
+
+  // шанс находки: чем больше ламп и удачи — тем чаще
+  const luck = luckNow();
+  const lampB = 1 + state.lamps*0.30;
+  const baseFind = 1 / stonePerSwing(locKey);
+  const findChance = clamp(baseFind * lampB * (1 + luck*0.08), 0, 0.95);
+
+  if (!chance(findChance)){
+    // иногда уголь/порода как утешение
+    if (chance(0.18)){
+      addMaterial('coal', 1);
+      return { type:'material', key:'coal', n:1, soft:true };
+    }
+    return { type:'empty' };
+  }
+
+  const yieldTable = host.yield;
+  let r = rand(), acc = 0, chosen = null;
+  for (const k of Object.keys(yieldTable)){
+    acc += yieldTable[k];
+    if (r <= acc){ chosen = k; break; }
+  }
+  if (!chosen) chosen = Object.keys(yieldTable)[0];
+
+  let sizeMult = 1;
+  if (locKey === 'kimberly') sizeMult = KIMBERLY_SECTORS[state.sector].mult;
+
+  if (STONE_TYPES[chosen]){
+    // размер: с перекосом в пользу мелких
+    const ranges = {
+      amethyst:[4,70], topaz:[5,100], emerald:[6,130],
+      sapphire:[8,200], ruby:[10,320], diamond:[12,400], star:[20,700]
+    };
+    const [mn,mx] = ranges[chosen];
+    let size = mn + (mx-mn)*Math.pow(rand(), 2.2);
+    size *= sizeMult * (1 + luck*0.04);
+    // редкий «гигант» — такие и попадают в музей
+    if (chance(0.012 + luck*0.008)) size *= 2.5 + rand()*5.5;
+    const st = addStone(chosen, size);
+    return st ? { type:'stone', key:chosen, stone:st } : { type:'full' };
+  } else {
+    const amount = 1 + Math.floor(rand()* (1 + Math.max(0, state.level/4)));
+    addMaterial(chosen, amount);
+    if (typeof sfxFind === 'function') sfxFind(0);
+    return { type:'material', key:chosen, n:amount };
+  }
+}
+
+/* ---------- ОГРАНКА ---------- */
+const CLARITY = [
+  { name:'SI2', mult:0.85 }, { name:'SI1', mult:0.95 }, { name:'VS2', mult:1.05 },
+  { name:'VS1', mult:1.15 }, { name:'VVS2', mult:1.28 }, { name:'VVS1', mult:1.42 },
+  { name:'Абсолютная чистота', mult:1.6 },
+];
+const COLORS = [
+  { name:'Насыщенный', mult:1.0 }, { name:'Яркий', mult:1.08 },
+  { name:'Глубокий', mult:1.16 }, { name:'Идеальный тон', mult:1.3 },
+];
+
+function gradingFee(key){
+  const t = STONE_TYPES[key];
+  return t.tier >= 3 ? GRADING_FEE_T3_PLUS : 0;
+}
+function canGrade(key){
+  const t = STONE_TYPES[key];
+  if (!t) return false;
+  const arr = state.inventory[key]||[];
+  return arr.length >= t.parts;
+}
+function gradeStone(key){
+  const t = STONE_TYPES[key];
+  if (!canGrade(key)) return null;
+  const fee = gradingFee(key);
+  if (state.money < fee){ if (typeof toast==='function') toast('Не хватает денег на огранку','bad'); return null; }
+  // берём самые крупные куски
+  const arr = state.inventory[key].slice().sort((a,b)=>b.size-a.size);
+  const used = arr.slice(0, t.parts);
+  const totalSize = used.reduce((a,s)=>a+s.size,0) * (t.parts===1 ? 1 : 0.92);
+  for (const u of used){
+    const i = state.inventory[key].findIndex(x=>x.id===u.id);
+    if (i>=0) state.inventory[key].splice(i,1);
+  }
+  state.money -= fee;
+
+  const luck = luckNow();
+  const roll = rand() + luck*0.03 + (state.vip?0.04:0);
+  let ci = 0;
+  if (roll>1.18) ci=6; else if (roll>1.02) ci=5; else if (roll>0.86) ci=4;
+  else if (roll>0.68) ci=3; else if (roll>0.48) ci=2; else if (roll>0.26) ci=1; else ci=0;
+  const clarity = CLARITY[ci];
+  const color = COLORS[clamp(Math.floor(rand()*COLORS.length + luck*0.25),0,3)];
+  const qmult = round1(clarity.mult * color.mult);
+
+  const crystal = {
+    id: uid(), key, carat: Math.round(totalSize*10)/10,
+    clarity: clarity.name, color: color.name, qmult,
+    hue: randInt(-15,15), cutAt: Date.now(),
+  };
+  state.crystals.push(crystal);
+  state.stats.graded++;
+  addXP(6 + t.tier*3);
+  if (typeof sfxGrade === 'function') sfxGrade();
+  checkExhibits(); checkAch();
+  return crystal;
+}
+
+/* ---------- ЮВЕЛИРКА ---------- */
+const JEWELRY_EXTRAS = {
+  ring:     { mats:{silver:3}, fee:30 },
+  earring:  { mats:{silver:4}, fee:45 },
+  bracelet: { mats:{silver:5, gold:1}, fee:70 },
+  pendant:  { mats:{gold:3}, fee:110 },
+  crown:    { mats:{gold:6, silver:2}, fee:220 },
+};
+function canCraftJewelry(type, crystalId){
+  const ex = JEWELRY_EXTRAS[type];
+  const c = state.crystals.find(x=>x.id===crystalId);
+  if (!ex || !c) return { ok:false, why:'нет кристалла' };
+  for (const k of Object.keys(ex.mats)){
+    if ((state.materials[k]||0) < ex.mats[k]) return { ok:false, why:`нужно ${MATERIALS[k].name} ×${ex.mats[k]}` };
+  }
+  if (state.money < ex.fee) return { ok:false, why:'не хватает денег на работу ювелира' };
+  return { ok:true };
+}
+function craftJewelry(type, crystalId){
+  const chk = canCraftJewelry(type, crystalId);
+  if (!chk.ok) return chk;
+  const ex = JEWELRY_EXTRAS[type];
+  const idx = state.crystals.findIndex(x=>x.id===crystalId);
+  const c = state.crystals[idx];
+  state.crystals.splice(idx,1);
+  for (const k of Object.keys(ex.mats)) state.materials[k] -= ex.mats[k];
+  state.money -= ex.fee;
+
+  // шанс качества крафта
+  const p = SWORD_QUALITY_BASE + luckNow()*0.03;
+  const qi = qualityRoll(p);
+  const j = {
+    id: uid(), type, key: c.key, carat: c.carat, clarity: c.clarity, color: c.color,
+    qmult: c.qmult, qmult2: QUALITY[qi].mult, quality: QUALITY[qi].id,
+    hue: c.hue, madeAt: Date.now(),
+  };
+  state.jewelry.push(j);
+  state.stats.jewelry++;
+  addXP(10 + STONE_TYPES[c.key].tier*2);
+  checkExhibits(); checkAch();
+  return { ok:true, jewelry:j };
+}
+function qualityRoll(p){
+  const r = rand();
+  if (r < p*0.04) return 4;
+  if (r < p*0.14) return 3;
+  if (r < p*0.34) return 2;
+  if (r < p*0.62) return 1;
+  return 0;
+}
+
+/* ---------- КУЗНИЦА ---------- */
+function canForgeSword(type){
+  const rec = SWORDS[type];
+  if (!rec) return { ok:false, why:'нет рецепта' };
+  for (const k of Object.keys(rec.mats)){
+    const have = STONE_TYPES[k] ? (state.inventory[k]||[]).length : (state.materials[k]||0);
+    if (have < rec.mats[k]) return { ok:false, why:`нужно ${STONE_TYPES[k]?STONE_TYPES[k].name:MATERIALS[k].name} ×${rec.mats[k]}` };
+  }
+  if (state.money < rec.cost) return { ok:false, why:'не хватает денег на кузнеца' };
+  return { ok:true };
+}
+function forgeSword(type){
+  const chk = canForgeSword(type);
+  if (!chk.ok) return chk;
+  const rec = SWORDS[type];
+  for (const k of Object.keys(rec.mats)){
+    if (STONE_TYPES[k]){
+      state.inventory[k].splice(0, rec.mats[k]);
+    } else {
+      state.materials[k] -= rec.mats[k];
+    }
+  }
+  state.money -= rec.cost;
+  const p = SWORD_QUALITY_BASE + luckNow()*0.03;
+  const qi = qualityRoll(p);
+  const s = {
+    id: uid(), type, quality: QUALITY[qi].id, qmult: QUALITY[qi].mult,
+    atk: Math.round(rec.atk * (0.9 + rand()*0.25) * 10)/10,
+    madeAt: Date.now(),
+  };
+  state.swords.push(s);
+  state.stats.swords++;
+  addXP(14);
+  checkExhibits(); checkAch();
+  return { ok:true, sword:s };
+}
+function swordPrice(s){
+  const rec = SWORDS[s.type];
+  return Math.round((rec.cost*2.1 + rec.atk*14) * s.qmult * sellBonus());
+}
+
+/* ---------- МУЗЕЙ ---------- */
+const MUSEUM_SLOTS = 6;
+function museumHasRoom(){ return state.museum.length < MUSEUM_SLOTS + state.counters; }
+function placeInMuseum(crystalId){
+  if (!museumHasRoom()) return { ok:false, why:'витрины заполнены' };
+  const i = state.crystals.findIndex(c=>c.id===crystalId);
+  if (i<0) return { ok:false, why:'нет кристалла' };
+  const c = state.crystals.splice(i,1)[0];
+  state.museum.push({ id:uid(), key:c.key, carat:c.carat, qmult:c.qmult, clarity:c.clarity, color:c.color, hue:c.hue, placedAt:Date.now() });
+  addXP(12);
+  addTickets(15);
+  checkAch();
+  return { ok:true };
+}
+function removeFromMuseum(id){
+  const i = state.museum.findIndex(m=>m.id===id);
+  if (i<0) return { ok:false };
+  const m = state.museum.splice(i,1)[0];
+  state.crystals.push({ id:uid(), key:m.key, carat:m.carat, qmult:m.qmult, clarity:m.clarity, color:m.color, hue:m.hue, cutAt:Date.now() });
+  return { ok:true };
+}
+function museumValue(){
+  return state.museum.reduce((a,m)=>a + Math.round(stoneValue(m.key, m.carat, m.qmult, true)*1.6), 0);
+}
+
+/* ---------- НАГРАДЫ КОЛЛЕКЦИИ (экспонаты года) ---------- */
+function checkExhibits(){
+  if (typeof GAME === 'undefined') return;
+  const maxSize = k => (state.inventory[k]||[]).reduce((a,s)=>Math.max(a,s.size),0);
+  const allMax = k => Math.max(
+    maxSize(k),
+    ...state.crystals.filter(c=>c.key===k).map(c=>c.carat),
+    ...state.museum.filter(c=>c.key===k).map(c=>c.carat),
+    ...state.jewelry.filter(c=>c.key===k).map(c=>c.carat),
+    ...state.swords.filter(s=>s.type===k).map(()=>1e9)
+  );
+  const conds = {
+    first: state.stats.graded>=1,
+    amethyst_giant: allMax('amethyst')>=500,
+    topaz_giant: allMax('topaz')>=800,
+    emerald_giant: allMax('emerald')>=1000,
+    sapphire_giant: allMax('sapphire')>=1500,
+    ruby_giant: allMax('ruby')>=2500,
+    diamond_big: allMax('diamond')>=3000,
+    diamond_mega: allMax('diamond')>=6000,
+    jewel_first: state.stats.jewelry>=1,
+    jewel_legend: state.jewelry.some(j=>j.quality==='legend'),
+    sword_first: state.stats.swords>=1,
+    sword_diamond: state.swords.some(s=>s.type==='diamond'),
+    cards: ['amethyst','topaz','emerald','sapphire','ruby','diamond'].every(k=>state.seenCards[k]),
+    quest_5: state.stats.orders>=5,
+    miner_10: state.level>=10,
+    hole_master: state.unlocked.includes('kimberly') && state.level>=15,
+  };
+  for (const ex of EXHIBITS){
+    if (state.rewardsDone.includes(ex.id)) continue;
+    if (conds[ex.id]){
+      state.rewardsDone.push(ex.id);
+      addMoney(ex.money, `— награда коллекции «${ex.name}»`);
+      if (typeof sfxUnlock === 'function') sfxUnlock();
+    }
+  }
+}
+
+/* ---------- ДОСТИЖЕНИЯ ---------- */
+function checkAch(){
+  for (const a of ACHIEVEMENTS){
+    if (state.achievements.includes(a.id)) continue;
+    let ok = false;
+    try{ ok = a.cond(state); }catch(e){ ok = false; }
+    if (ok){
+      state.achievements.push(a.id);
+      addMoney(a.money, `— достижение «${a.name}»`);
+      if (typeof toast==='function') toast(`🏆 Достижение: ${a.name}`, 'good');
+      if (typeof sfxUnlock==='function') sfxUnlock();
+    }
+  }
+}
+
+/* ---------- ЗАКАЗЫ ---------- */
+const ORDER_TYPES = [
+  { kind:'materials', label:'Поставка руды' },
+  { kind:'jewelry', label:'Украшение на заказ' },
+  { kind:'crystal', label:'Кристалл на заказ' },
+];
+function makeOrder(){
+  const lvl = state.level;
+  const r = rand();
+  if (r < 0.34){
+    const mat = pick(['coal','iron','silver','gold','quartz']);
+    const n = Math.max(3, Math.round((3 + rand()*6) * (1 + lvl*0.15)));
+    return {
+      id: uid(), kind:'materials', mat, n,
+      reward: Math.round(materialPrice(mat)*n*1.7 + 20 + lvl*10), xp: 8+lvl*2,
+      text: `${MATERIALS[mat].icon} ${MATERIALS[mat].name} ×${n}`,
+    };
+  } else if (r < 0.72){
+    const type = pick(['ring','earring','bracelet','pendant']);
+    const minQ = pick(['common','common','fine']);
+    return {
+      id: uid(), kind:'jewelry', itemType:type, minQuality:minQ,
+      reward: Math.round(120 + lvl*45 + rand()*90), xp: 12+lvl*3,
+      text: `${ITEM_TYPES[type].icon} ${ITEM_TYPES[type].name} (качество «${QUALITY.find(q=>q.id===minQ).name}» или лучше)`,
+    };
+  } else {
+    const key = pick(state.unlocked.includes('kimberly') ? ['sapphire','ruby','diamond','emerald'] : ['amethyst','topaz','emerald']);
+    const carat = Math.round((80 + rand()*220) * (1 + lvl*0.25));
+    return {
+      id: uid(), kind:'crystal', key, carat,
+      reward: Math.round(stoneValue(key, carat, 1, true)*1.9 + 40), xp: 12+lvl*3,
+      text: `${STONE_TYPES[key].icon} ${STONE_TYPES[key].name} от ${carat} кт`,
+    };
+  }
+}
+function refreshOrders(force){
+  const now = Date.now();
+  if (!force && now - state.orderCooldownAt < 90000) return;
+  const want = 3;
+  if (state.orders.length < want){
+    while (state.orders.length < want) state.orders.push(makeOrder());
+  }
+  state.orderCooldownAt = now;
+}
+function canFulfillOrder(o){
+  if (o.kind==='materials') return (state.materials[o.mat]||0) >= o.n;
+  if (o.kind==='jewelry'){
+    const qOrder = QUALITY.findIndex(q=>q.id===o.minQuality);
+    return state.jewelry.some(j=>j.type===o.itemType && QUALITY.findIndex(q=>q.id===j.quality) >= qOrder);
+  }
+  if (o.kind==='crystal'){
+    return state.crystals.some(c=>c.key===o.key && c.carat>=o.carat) ||
+           (state.inventory[o.key]||[]).some(s=>s.size>=o.carat);
+  }
+  return false;
+}
+function fulfillOrder(id){
+  const o = state.orders.find(x=>x.id===id);
+  if (!o) return { ok:false };
+  if (!canFulfillOrder(o)) return { ok:false, why:'нет нужного предмета' };
+  if (o.kind==='materials'){
+    state.materials[o.mat] -= o.n;
+  } else if (o.kind==='jewelry'){
+    const qOrder = QUALITY.findIndex(q=>q.id===o.minQuality);
+    // сдаём худшее подходящее
+    const cands = state.jewelry.filter(j=>j.type===o.itemType && QUALITY.findIndex(q=>q.id===j.quality)>=qOrder)
+      .sort((a,b)=>QUALITY.findIndex(q=>q.id===a.quality)-QUALITY.findIndex(q=>q.id===b.quality));
+    const j = cands[0];
+    state.jewelry.splice(state.jewelry.findIndex(x=>x.id===j.id),1);
+  } else {
+    const c = state.crystals.find(c=>c.key===o.key && c.carat>=o.carat);
+    if (c) state.crystals.splice(state.crystals.findIndex(x=>x.id===c.id),1);
+    else {
+      const arr = state.inventory[o.key];
+      const idx = arr.findIndex(s=>s.size>=o.carat);
+      arr.splice(idx,1);
+    }
+  }
+  state.orders = state.orders.filter(x=>x.id!==id);
+  state.stats.orders++;
+  addMoney(o.reward, '— заказ выполнен');
+  addXP(o.xp);
+  addTickets(8);
+  checkExhibits(); checkAch();
+  return { ok:true };
+}
+
+/* ---------- ПРОДАЖА ---------- */
+function sellCrystal(id){
+  const i = state.crystals.findIndex(c=>c.id===id);
+  if (i<0) return;
+  const c = state.crystals[i];
+  const price = crystalPrice(c);
+  state.crystals.splice(i,1);
+  addMoney(price);
+  state.stats.sold++;
+}
+function sellJewelry(id){
+  const i = state.jewelry.findIndex(j=>j.id===id);
+  if (i<0) return;
+  const j = state.jewelry[i];
+  const price = jewelryPrice(j);
+  state.jewelry.splice(i,1);
+  addMoney(price);
+  state.stats.sold++;
+}
+function sellSword(id){
+  const i = state.swords.findIndex(s=>s.id===id);
+  if (i<0) return;
+  const s = state.swords[i];
+  const price = swordPrice(s);
+  state.swords.splice(i,1);
+  addMoney(price);
+  state.stats.sold++;
+}
+function sellStone(key, stoneId){
+  const arr = state.inventory[key];
+  if (!arr) return;
+  const i = arr.findIndex(s=>s.id===stoneId);
+  if (i<0) return;
+  const s = arr[i];
+  arr.splice(i,1);
+  addMoney(stoneValue(key, s.size, 1, false));
+}
+function sellAllRaw(){
+  let total = 0, count = 0;
+  for (const k of Object.keys(state.inventory)){
+    for (const s of state.inventory[k]){
+      total += stoneValue(k, s.size, 1, false); count++;
+    }
+  }
+  state.inventory = {};
+  if (total>0){ addMoney(total); state.stats.sold += count; }
+  return { total, count };
+}
+function sellMaterial(key, n){
+  const have = state.materials[key]||0;
+  const q = Math.min(have, n);
+  if (q<=0) return 0;
+  state.materials[key] -= q;
+  const total = materialPrice(key)*q;
+  addMoney(total);
+  return total;
+}
+
+/* ---------- РЫНОК ---------- */
+function tickMarket(force){
+  const now = Date.now();
+  if (!force && now - (state.marketAt||0) < 120000) return;
+  const keys = [...Object.keys(STONE_TYPES), ...Object.keys(MATERIALS)];
+  for (const k of keys){
+    state.market[k] = round1(0.8 + Math.random()*0.55);
+  }
+  state.marketAt = now;
+}
+
+/* ---------- МАГАЗИН ---------- */
+function buyShop(id){
+  const it = SHOP_ITEMS.find(x=>x.id===id);
+  if (!it) return { ok:false };
+  if (it.id==='vip' && state.vip) return { ok:false, why:'VIP уже активен' };
+  if (it.id==='lamp' && state.lamps>=LAMP_MAX) return { ok:false, why:'Максимум 3 лампы' };
+  if (it.currency==='money' && state.money < it.price) return { ok:false, why:'не хватает денег' };
+  if (it.currency==='coins' && state.coins < it.price) return { ok:false, why:'не хватает монет' };
+  if (it.currency==='money') state.money -= it.price;
+  else state.coins -= it.price;
+
+  if (it.id==='focus'){
+    state.energy = Math.min(maxEnergyNow()+50, state.energy+10);
+    if (typeof toast==='function') toast('🧿 +10 энергии','good');
+  } else if (it.id==='lamp'){ state.lamps++; }
+  else if (it.id==='counter'){ state.counters++; }
+  else if (it.id==='vip'){ state.vip = true; }
+  return { ok:true };
+}
+function buyCoins(packIdx){
+  const p = COIN_PACKS[packIdx];
+  if (!p) return { ok:false };
+  // Демо-платёж: в реальной игре здесь платёжный шлюз
+  state.coins += p.coins + p.bonus;
+  if (typeof toast==='function') toast(`🪙 +${p.coins+p.bonus} монет (${p.price} ₽)`, 'good');
+  return { ok:true, pack:p };
+}
+
+/* ---------- ОТКРЫТИЕ ШАХТ ---------- */
+function unlockMine(key){
+  const h = HOSTS[key];
+  if (!h) return { ok:false };
+  if (state.unlocked.includes(key)) return { ok:false, why:'уже открыта' };
+  if (state.money < h.unlock) return { ok:false, why:'не хватает денег' };
+  if (h.lampReq && state.lamps < h.lampReq) return { ok:false, why:`нужно ламп: ${h.lampReq}` };
+  state.money -= h.unlock;
+  state.unlocked.push(key);
+  if (typeof toast==='function') toast(`🕳️ Открыта шахта: ${h.name}`, 'good');
+  checkExhibits(); checkAch();
+  return { ok:true };
+}
+function sectorCost(){
+  const next = state.sectorOpen + 1;
+  return KIMBERLY_SECTOR_TICKETS * Math.pow(2, next-1);
+}
+function unlockSector(){
+  if (!state.unlocked.includes('kimberly')) return { ok:false, why:'Сначала откройте Великую Дыру' };
+  if (state.sectorOpen >= KIMBERLY_SECTORS.length) return { ok:false, why:'Все сектора открыты' };
+  const cost = sectorCost();
+  if (state.tickets < cost) return { ok:false, why:`нужно ${cost} билетов` };
+  state.tickets -= cost;
+  state.sectorOpen++;
+  if (typeof toast==='function') toast(`🕳️ Новый сектор: ${KIMBERLY_SECTORS[state.sectorOpen-1].name}`, 'good');
+  return { ok:true };
+}
+
+/* ---------- ЭНЕРГИЯ / БИЛЕТЫ (пассивный тик) ---------- */
+let _tickMark = null;
+function passiveTick(now){
+  if (_tickMark===null){ _tickMark = now; return { energy:0, tickets:0 }; }
+  const dt = (now - _tickMark)/1000;
+  if (dt < 1) return { energy:0, tickets:0 };
+  _tickMark = now;
+  const res = { energy:0, tickets:0 };
+
+  // энергия
+  const me = maxEnergyNow();
+  if (state.energy < me){
+    const before = state.energy;
+    state.energy = Math.min(me, state.energy + dt/GAME.ENERGY_REGEN_SEC);
+    res.energy = state.energy - before;
+  }
+  // билеты музея
+  const rate = ticketsRate();
+  if (rate>0){
+    const before = state.tickets;
+    state.tickets = Math.min(999999, state.tickets + dt*rate);
+    res.tickets = state.tickets - before;
+  }
+  // руда в жилах на поверхности (добыча "простаивает")
+  return res;
+}
+
+/* ---------- ДЕМО-ЦИФРЫ ---------- */
+function rubyPrice(){
+  // пример для витрины доната
+  return Math.round(COIN_PACKS[1].price / COIN_PACKS[1].coins * 10)/10;
+}
+
+/* ---------- API ---------- */
+window.game = {
+  state: ()=>state,
+  S: ()=>state,
+  data: { GAME, STONE_TYPES, MATERIALS, ITEM_TYPES, QUALITY, SWORDS, HOSTS, KIMBERLY_SECTORS, EXHIBITS, ACHIEVEMENTS, COIN_PACKS, SHOP_ITEMS, MUSEUM_SLOTS, LAMP_MAX, PRICE_PER_CARAT },
+  fmtMoney, fmtCoins,
+  save, load, hardReset,
+  addMoney, spendMoney, addXP, addTickets,
+  swing, gradeStone, canGrade, gradingFee,
+  craftJewelry, canCraftJewelry, JEWELRY_EXTRAS,
+  forgeSword, canForgeSword, swordPrice,
+  crystalPrice, jewelryPrice, stoneValue, materialPrice, marketMult,
+  sellCrystal, sellJewelry, sellSword, sellStone, sellAllRaw, sellMaterial,
+  placeInMuseum, removeFromMuseum, museumHasRoom, museumValue, museumBonus, sellBonus, ticketsRate,
+  makeOrder, refreshOrders, canFulfillOrder, fulfillOrder,
+  buyShop, buyCoins, unlockMine, unlockSector, sectorCost,
+  passiveTick, tickMarket,
+  invCount, inventoryFull,
+  maxEnergyNow, luckNow, xpToNext,
+  checkExhibits, checkAch,
+  rubyPrice, CLARITY, COLORS,
+};
+
+/* ==================== js/sfx.js ==================== */
+/* =========================================================
+   КАМЕННЫЙ ПУТЬ — звук (WebAudio, без файлов)
+   ========================================================= */
+'use strict';
+let AC = null;
+function audio(){
+  if (!AC){
+    try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC = null; }
+  }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function enabled(){
+  try{ return state ? state.sfx !== false : true; }catch(e){ return true; }
+}
+function tone(freq, dur, type, vol, slideTo, delay){
+  if (!enabled()) return;
+  const a = audio(); if (!a) return;
+  const t0 = a.currentTime + (delay||0);
+  const o = a.createOscillator();
+  const g = a.createGain();
+  o.type = type || 'sine';
+  o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(30, slideTo), t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol!==undefined?vol:0.08, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(a.destination);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+function noise(dur, vol, filterFreq, delay){
+  if (!enabled()) return;
+  const a = audio(); if (!a) return;
+  const t0 = a.currentTime + (delay||0);
+  const len = Math.floor(a.sampleRate * dur);
+  const buf = a.createBuffer(1, len, a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i=0;i<len;i++) d[i] = (Math.random()*2-1) * (1 - i/len);
+  const src = a.createBufferSource(); src.buffer = buf;
+  const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = filterFreq||1200;
+  const g = a.createGain(); g.gain.value = vol!==undefined?vol:0.12;
+  src.connect(f); f.connect(g); g.connect(a.destination);
+  src.start(t0);
+}
+let _lastSwingSfx = 0;
+function sfxSwing(){
+  const now = performance.now();
+  if (now - _lastSwingSfx < 150) return;   // не забиваем звук при серии ударов
+  _lastSwingSfx = now;
+  noise(0.14, 0.09, 2400); tone(190, 0.10, 'triangle', 0.045, 95);
+}
+function sfxDull(){ noise(0.08, 0.07, 700); tone(95, 0.08, 'square', 0.035, 60); }
+function sfxFind(tier){
+  const base = 520 + (tier||0)*65;
+  tone(base, 0.16, 'sine', 0.09);
+  tone(base*1.5, 0.22, 'sine', 0.07, null, 0.05);
+  if (tier>=5){ tone(base*2, 0.3, 'sine', 0.06, null, 0.12); tone(base*2.5, 0.36, 'triangle', 0.05, null, 0.2); }
+}
+function sfxGrade(){
+  [523, 659, 784, 1046].forEach((f,i)=>tone(f, 0.18, 'sine', 0.07, null, i*0.06));
+}
+function sfxCoin(){ tone(880, 0.09, 'square', 0.05); tone(1320, 0.14, 'square', 0.04, null, 0.06); }
+function sfxLevel(){
+  [392, 523, 659, 784, 1046].forEach((f,i)=>tone(f, 0.22, 'triangle', 0.07, null, i*0.08));
+}
+function sfxUnlock(){
+  [330, 415, 494, 659].forEach((f,i)=>tone(f, 0.28, 'sine', 0.08, null, i*0.1));
+  noise(0.5, 0.04, 900, 0.1);
+}
+function sfxClick(){ tone(700, 0.05, 'square', 0.03); }
+function sfxError(){ tone(150, 0.18, 'sawtooth', 0.05, 90); }
+
+/* ==================== js/telegram.js ==================== */
+/* =========================================================
+   КАМЕННЫЙ ПУТЬ — интеграция с Telegram Mini Apps
+   Работает и вне Telegram (обычный телефон/планшет)
+   ========================================================= */
+'use strict';
+
+const TG = {
+  webapp: null,
+  inTelegram: false,
+  user: null,
+  cloud: false,
+  startParam: null,
+};
+
+(function initTelegram(){
+  function detect(){
+    try{
+      const wa = window.Telegram && window.Telegram.WebApp;
+      if (!wa || wa.initData === undefined) return false;
+      TG.webapp = wa;
+      TG.inTelegram = true;
+      TG.platform = wa.platform || '';
+      try{ wa.ready(); }catch(e){}
+      try{ wa.expand(); }catch(e){}
+      try{ wa.disableVerticalSwipes && wa.disableVerticalSwipes(); }catch(e){}
+      try{ wa.setHeaderColor('#0a0c11'); }catch(e){}
+      try{ wa.setBackgroundColor('#0a0c11'); }catch(e){}
+      if (wa.BackButton){
+        try{
+          wa.BackButton.onClick(()=>{
+            if (document.body.classList.contains('mine-mode') && typeof uiExitMine === 'function') uiExitMine();
+            else if (typeof closeModal === 'function') closeModal();
+          });
+        }catch(e){}
+      }
+      try{
+        const ver = parseFloat(wa.version || '6.0');
+        TG.cloud = ver >= 6.9 && !!(wa.CloudStorage && wa.CloudStorage.setItem);
+      }catch(e){ TG.cloud = false; }
+      if (wa.initDataUnsafe && wa.initDataUnsafe.user) TG.user = wa.initDataUnsafe.user;
+      if (wa.initDataUnsafe && wa.initDataUnsafe.start_param) TG.startParam = wa.initDataUnsafe.start_param;
+      try{ wa.onEvent && wa.onEvent('viewportChanged', ()=>{ if (typeof engine !== 'undefined' && engine.resize) engine.resize(); }); }catch(e){}
+      if (typeof onTelegramReady === 'function'){
+        try{ onTelegramReady(); }catch(e){}
+      }
+      return true;
+    }catch(e){ return false; }
+  }
+  // 1) SDK уже загружен?
+  if (!detect()){
+    // 2) ждём колбэка от загрузчика в index.html
+    window.onTelegramSdkReady = ()=>{ detect(); };
+    // 3) и ещё раз проверим чуть позже (на случай гонки)
+    setTimeout(detect, 800);
+    setTimeout(detect, 2500);
+  }
+})();
+
+/* ---------- вибрация ---------- */
+function haptic(type){
+  try{
+    const wa = TG.webapp;
+    if (wa && wa.HapticFeedback){
+      if (type === 'light') wa.HapticFeedback.impactOccurred('light');
+      else if (type === 'medium') wa.HapticFeedback.impactOccurred('medium');
+      else if (type === 'heavy') wa.HapticFeedback.impactOccurred('heavy');
+      else if (type === 'success') wa.HapticFeedback.notificationOccurred('success');
+      else if (type === 'error') wa.HapticFeedback.notificationOccurred('error');
+      else if (type === 'select') wa.HapticFeedback.selectionChanged();
+    } else if (navigator.vibrate){
+      const map = { light:[8], medium:[14], heavy:[24], success:[12,40,18], error:[28,50,28], select:[6] };
+      navigator.vibrate(map[type] || [10]);
+    }
+  }catch(e){}
+}
+
+/* ---------- облачное сохранение (CloudStorage) ---------- */
+function cloudSave(data, cb){
+  if (!TG.cloud){ if (cb) cb(false); return; }
+  try{
+    TG.webapp.CloudStorage.setItem('save', data, (err)=>{
+      if (cb) cb(!err);
+    });
+  }catch(e){ if (cb) cb(false); }
+}
+function cloudLoad(cb){
+  if (!TG.cloud){ cb(null); return; }
+  try{
+    TG.webapp.CloudStorage.getItem('save', (err, value)=>{
+      cb(err ? null : value || null);
+    });
+  }catch(e){ cb(null); }
+}
+
+/* ---------- нативный диалог «назад» внутри игры ---------- */
+function showBackButton(show){
+  try{
+    const wa = TG.webapp;
+    if (!wa || !wa.BackButton) return;
+    if (show) wa.BackButton.show(); else wa.BackButton.hide();
+  }catch(e){}
+}
+
+/* ---------- тактильная кнопка «поделиться рекордом» ---------- */
+function tgShare(text){
+  try{
+    if (TG.webapp && TG.webapp.switchInlineQuery) return;
+    if (navigator.share){ navigator.share({ title:'Каменный путь', text }); }
+  }catch(e){}
+}
+
+/* ==================== js/engine.js ==================== */
+/* =========================================================
+   КАМЕННЫЙ ПУТЬ — 3D-движок шахты (raycasting, 1 лицо)
+   ========================================================= */
+'use strict';
+(function(){
+  const TAU = Math.PI*2;
+
+  const THEMES = {
+    purple: { wall:'#463c63', wall2:'#352c4c', accent:'#b388ff', glow:'#d7bbff', fog:'#0b0814', floor:'#2b2340', ceilD:'#161127' },
+    gold:   { wall:'#5a4a2e', wall2:'#453726', accent:'#ffcc66', glow:'#ffe0a0', fog:'#120d06', floor:'#2e2415', ceilD:'#1d160d' },
+    green:  { wall:'#2d4c39', wall2:'#23392b', accent:'#66e0a0', glow:'#a8ffc9', fog:'#06120b', floor:'#1c2e23', ceilD:'#102017' },
+    blue:   { wall:'#2a4360', wall2:'#1f3449', accent:'#6fb7ff', glow:'#a8d4ff', fog:'#050e18', floor:'#17283a', ceilD:'#0c1826' },
+    ice:    { wall:'#9fb6c4', wall2:'#8399a9', accent:'#bfe9ff', glow:'#ffffff', fog:'#20303d', floor:'#7d94a3', ceilD:'#a9bfcc' },
+  };
+
+  const MAP_W = 33, MAP_H = 25;
+
+  const eng = {
+    canvas: null, ctx: null,
+    W: 640, H: 400, dpr: 1,
+    running: false,
+    loc: 'amethyst',
+    map: null,
+    veins: new Map(),       // "x,y" -> {regenAt}
+    player: { x:3.5, y:3.5, a:0, vx:0, vy:0, bob:0 },
+    keys: Object.create(null),
+    z: null,
+    particles: [],
+    dotsFloor: [], dotsCeil: [],
+    swingT: -1,
+    locked: false,
+    last: 0,
+    callbacks: {},
+    fogPhase: 0,
+    hintT: 0,
+    veinGlow: [],
+    mini: null,
+  };
+
+  /* ---------- текстуры ---------- */
+  function makeNoiseCanvas(size, base, variance, seed){
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const g = c.getContext('2d');
+    const rnd = mulberry(seed);
+    g.fillStyle = base; g.fillRect(0,0,size,size);
+    // зернистость
+    for (let i=0;i<size*size*0.42;i++){
+      const x = rnd()*size, y = rnd()*size;
+      const v = (rnd()-0.5)*variance*2;
+      g.fillStyle = `rgba(${v>0?255:0},${v>0?255:0},${v>0?255:0},${Math.abs(v)/255*0.55})`;
+      g.fillRect(x,y,1+rnd()*2,1+rnd()*2);
+    }
+    // кладка: горизонтальные швы
+    const course = size/5;
+    for (let row=0; row<=5; row++){
+      const y = row*course;
+      g.fillStyle = 'rgba(0,0,0,0.32)';
+      g.fillRect(0, y-1.5, size, 3);
+      g.fillStyle = 'rgba(255,255,255,0.06)';
+      g.fillRect(0, y+1.5, size, 1.5);
+      // вертикальные стыки со сдвигом
+      const offset = (row%2)? course*0.5 : 0;
+      for (let bx = offset; bx < size; bx += course*1.35){
+        g.fillStyle = 'rgba(0,0,0,0.26)';
+        g.fillRect(bx, y, 2.5, course);
+      }
+      // вариация цвета блока
+      for (let bx=0; bx<size; bx += course*1.35){
+        g.fillStyle = `rgba(${rnd()<0.5?255:0},${rnd()<0.5?255:0},${rnd()<0.5?255:0},0.028)`;
+        g.fillRect(bx, y, course*1.35, course);
+      }
+      // объём блока
+      const grad = g.createLinearGradient(0, y, 0, y+course);
+      grad.addColorStop(0, 'rgba(255,255,255,0.045)');
+      grad.addColorStop(0.5, 'rgba(255,255,255,0)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.16)');
+      g.fillStyle = grad;
+      g.fillRect(0, y, size, course);
+    }
+    // трещины
+    g.strokeStyle = 'rgba(0,0,0,0.36)';
+    for (let i=0;i<9;i++){
+      g.beginPath();
+      let x = rnd()*size, y = rnd()*size;
+      g.moveTo(x,y);
+      for (let k=0;k<7;k++){ x += (rnd()-0.5)*size*0.30; y += rnd()*size*0.16; g.lineTo(x,y); }
+      g.lineWidth = 1+rnd()*1.8;
+      g.stroke();
+    }
+    // светлые вкрапления
+    g.fillStyle = 'rgba(255,255,255,0.05)';
+    for (let i=0;i<50;i++){
+      const x=rnd()*size, y=rnd()*size, w=1+rnd()*4;
+      g.fillRect(x,y,w,w*0.7);
+    }
+    return c;
+  }
+  function makeGemCanvas(size, base, accent, seed){
+    const c = makeNoiseCanvas(size, base, 26, seed);
+    const g = c.getContext('2d');
+    const rnd = mulberry(seed+7);
+    // прожилки
+    g.strokeStyle = accent + '55';
+    g.lineWidth = 2;
+    for (let i=0;i<10;i++){
+      g.beginPath();
+      let x = rnd()*size, y = rnd()*size;
+      g.moveTo(x,y);
+      for (let k=0;k<5;k++){ x += (rnd()-0.5)*size*0.3; y += (rnd()-0.5)*size*0.3; g.lineTo(x,y); }
+      g.stroke();
+    }
+    for (let i=0;i<26;i++){
+      const cx = 8 + rnd()*(size-16), cy = 8 + rnd()*(size-16);
+      const r = 3 + rnd()*9;
+      g.save();
+      g.translate(cx,cy);
+      g.rotate(rnd()*TAU);
+      const grad = g.createRadialGradient(0,0,0,0,0,r);
+      grad.addColorStop(0, accent);
+      grad.addColorStop(0.55, accent+'aa');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = grad;
+      g.beginPath();
+      g.moveTo(0,-r); g.lineTo(r*0.7,0); g.lineTo(0,r); g.lineTo(-r*0.7,0);
+      g.closePath(); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.75)';
+      g.beginPath(); g.moveTo(0,-r*0.6); g.lineTo(r*0.24,0); g.lineTo(0,r*0.1); g.closePath(); g.fill();
+      g.restore();
+    }
+    return c;
+  }
+  function mulberry(a){
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  let texCache = {};
+  function getTextures(themeKey){
+    if (texCache[themeKey]) return texCache[themeKey];
+    const th = THEMES[themeKey] || THEMES.purple;
+    const tex = {
+      wall: makeNoiseCanvas(256, th.wall, 24, 11),
+      wall2: makeNoiseCanvas(256, th.wall2, 20, 23),
+      gem: makeGemCanvas(256, th.wall2, th.accent, 31),
+      gem2: makeGemCanvas(256, th.wall, th.glow, 47),
+    };
+    texCache[themeKey] = tex;
+    return tex;
+  }
+
+  /* ---------- карта ---------- */
+  function buildMap(seedStr){
+    let seed = 0;
+    for (let i=0;i<seedStr.length;i++) seed = (seed*31 + seedStr.charCodeAt(i))|0;
+    const rnd = mulberry(seed);
+    const map = new Uint8Array(MAP_W*MAP_H).fill(1);
+    const at = (x,y)=> y*MAP_W+x;
+    const set = (x,y,v)=>{ if (x>0&&y>0&&x<MAP_W-1&&y<MAP_H-1) map[at(x,y)] = v; };
+    const get = (x,y)=> (x<0||y<0||x>=MAP_W||y>=MAP_H) ? 1 : map[at(x,y)];
+
+    // случайные блуждающие коридоры (ширина 2 клетки — чтобы свободно ходить)
+    const carve = (x,y)=>{ set(x,y,0); set(x+1,y,0); set(x,y+1,0); set(x+1,y+1,0); };
+    const walkers = 10;
+    for (let w=0;w<walkers;w++){
+      let x = 2 + Math.floor(rnd()*(MAP_W-5));
+      let y = 2 + Math.floor(rnd()*(MAP_H-5));
+      let dir = Math.floor(rnd()*4);
+      const len = 40 + Math.floor(rnd()*90);
+      for (let i=0;i<len;i++){
+        carve(x,y);
+        const dx = [1,0,-1,0][dir], dy = [0,1,0,-1][dir];
+        x += dx; y += dy;
+        if (x<2||y<2||x>=MAP_W-4||y>=MAP_H-4){ dir = (dir+2)%4; x = clampInt(x,2,MAP_W-4); y = clampInt(y,2,MAP_H-4); }
+        if (rnd()<0.22) dir = Math.floor(rnd()*4);
+      }
+    }
+    // центральный зал (небольшой)
+    const cx = (MAP_W>>1), cy = (MAP_H>>1);
+    for (let y=cy-2;y<=cy+2;y++) for (let x=cx-3;x<=cx+3;x++) set(x,y,0);
+    // колонны
+    for (let i=0;i<14;i++){
+      const x = 3+Math.floor(rnd()*(MAP_W-6)), y = 3+Math.floor(rnd()*(MAP_H-6));
+      if (get(x,y)===0 && Math.abs(x-cx)>2 && Math.abs(y-cy)>2) set(x,y,1);
+    }
+    // жилы: стены, примыкающие к полу
+    const veins = new Map();
+    const veinCells = [];
+    for (let y=1;y<MAP_H-1;y++){
+      for (let x=1;x<MAP_W-1;x++){
+        if (get(x,y)!==1) continue;
+        const near = get(x+1,y)===0||get(x-1,y)===0||get(x,y+1)===0||get(x,y-1)===0;
+        if (near && rnd()<0.30){ set(x,y,2); veinCells.push({x,y}); }
+      }
+    }
+    // гарантированно немного жил рядом со стартом
+    return { map, veins, veinCells, at, get, set };
+  }
+  function clampInt(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+  /* ---------- инициализация ---------- */
+  eng.init = function(canvas){
+    eng.canvas = canvas;
+    eng.ctx = canvas.getContext('2d', { alpha:false });
+    eng.mini = document.getElementById('minimap');
+    resize();
+    window.addEventListener('resize', resize);
+    window.addEventListener('orientationchange', ()=>setTimeout(resize, 250));
+    if (window.visualViewport){
+      window.visualViewport.addEventListener('resize', ()=>setTimeout(resize, 120));
+    }
+    eng.bootInput();
+    makeDots();
+  };
+  eng.setupResize = function(){
+    const wrap = document.getElementById('mineWrap');
+    if (wrap && window.ResizeObserver && !eng._ro){
+      eng._ro = new ResizeObserver(()=>resize());
+      eng._ro.observe(wrap);
+    }
+    setTimeout(resize, 50);
+  };
+
+  function resize(){
+    if (!eng.canvas) return;
+    const r = eng.canvas.getBoundingClientRect();
+    const dprTarget = Math.min(1.25, window.devicePixelRatio||1);
+    eng.dpr = dprTarget;
+    const maxW = 980;
+    const w = Math.min(maxW, Math.max(480, Math.floor(r.width * dprTarget)));
+    const h = Math.max(300, Math.floor(r.height * dprTarget));
+    eng.canvas.width = w; eng.canvas.height = h;
+    eng.W = w; eng.H = h;
+    eng.z = new Float32Array(Math.ceil(w/2));
+  }
+
+  function makeDots(){
+    const rnd = mulberry(999);
+    eng.dotsFloor = []; eng.dotsCeil = [];
+    for (let i=0;i<160;i++) eng.dotsFloor.push({ ang: rnd()*TAU, dist: 0.6+rnd()*9, s: 0.4+rnd()*1.6, sh: rnd()*0.30+0.05 });
+    for (let i=0;i<90;i++) eng.dotsCeil.push({ ang: rnd()*TAU, dist: 0.8+rnd()*8, s: 0.5+rnd()*2.0, sh: rnd()*0.25+0.02 });
+  }
+
+  /* ---------- вход/выход ---------- */
+  eng.enter = function(locKey){
+    eng.loc = locKey;
+    const themeKey = (HOSTS[locKey]||{}).theme || 'purple';
+    eng.theme = THEMES[themeKey] || THEMES.purple;
+    eng.tex = getTextures(themeKey);
+    const built = buildMap(locKey + '_' + Date.now());
+    eng.map = built.map;
+    eng.grid = built;
+    eng.veinCells = built.veinCells;
+    // стартовая позиция — ближайший открытый к центру
+    let sx = MAP_W>>1, sy = MAP_H>>1;
+    outer:
+    for (let radius=0; radius<14; radius++){
+      for (let dy=-radius; dy<=radius; dy++) for (let dx=-radius; dx<=radius; dx++){
+        const x = sx+dx, y = sy+dy;
+        if (built.get(x,y)===0 && built.get(x+1,y)===0 && built.get(x,y+1)===0 && built.get(x+1,y+1)===0){
+          sx=x; sy=y; break outer;
+        }
+      }
+    }
+    eng.player.x = sx+0.5; eng.player.y = sy+0.5; eng.player.a = -Math.PI/2;
+    if (typeof resetJoy === 'function') resetJoy();
+    input.lookPointer = null; input.stepQueued = 0;
+    input.lookVX = 0; input.lookVY = 0; input.turn = 0;
+    eng.particles = [];
+    eng.swingT = -1;
+    if (!eng.running){
+      eng.running = true;
+      eng.last = performance.now();
+      requestAnimationFrame(loop);
+    }
+    eng.watchdog();
+    eng.resize = resize;
+    setTimeout(resize, 30);
+  };
+
+  eng.exit = function(){
+    eng.running = false;
+    eng.releaseLock();
+    const w = document.getElementById('engineDead');
+    if (w) w.remove();
+  };
+
+  // сторож: если кадров нет — предлагаем перезапуск сцены
+  eng.watchdog = function(){
+    clearInterval(eng._wd);
+    eng.frames = 0;
+    eng._wd = setInterval(()=>{
+      if (!eng.running){ clearInterval(eng._wd); return; }
+      if ((eng.frames||0) === 0 && !document.getElementById('engineDead')){
+        const box = document.createElement('div');
+        box.id = 'engineDead';
+        box.style.cssText = 'position:absolute;left:12px;right:12px;bottom:140px;z-index:60;background:rgba(26,20,10,.95);border:1px solid #ffcc66;border-radius:12px;padding:11px;font-size:12px;color:#ffe6b3;text-align:center';
+        box.innerHTML = 'Сцена не запустилась на этом устройстве.<br><button class="btn gold sm" style="margin-top:8px" data-act="restart-engine">Перезагрузить шахту</button>';
+        (document.getElementById('mineWrap')||document.body).appendChild(box);
+      } else if ((eng.frames||0) > 0){
+        clearInterval(eng._wd);
+      }
+    }, 2500);
+  };
+
+  /* ---------------------------------------------------------
+     УПРАВЛЕНИЕ — Pointer Events (iOS 13+, Android, мышь)
+     • джойстик: тянем в любом месте слева — он «подпрыгивает» под палец
+     • обзор: свайп справа
+     • тап по сцене: удар киркой + маленький шаг вперёд
+     • кнопка ⛏️: удар (можно удерживать)
+     --------------------------------------------------------- */
+  const input = {
+    mx: 0, my: 0,              // направление движения (-1..1)
+    joyPointer: null,
+    lookPointer: null,
+    lookX: 0, lookY: 0, lookMoved: 0, lookT: 0,
+    lookVX: 0, lookVY: 0,      // накопленный поворот (сглаживание)
+    turn: 0,                   // −1/0/+1 от кнопок поворота
+    stepQueued: 0,
+  };
+  const LOOK_SENS_X = 0.0085;   // радиан на пиксель — заметно живее
+  const LOOK_SENS_Y = 0.0022;
+  const PITCH_MAX = 0.42;       // можно смотреть выше/ниже
+
+  function isUI(el){
+    return !!(el && el.closest && el.closest('button, #joystick, #swingBtn, #mineExit, #minimap, #mineFeed, .modal, #modalBack'));
+  }
+
+  function setJoy(vecX, vecY){
+    input.mx = vecX; input.my = vecY;
+    const knob = document.getElementById('joyKnob');
+    if (knob) knob.style.transform = `translate(${vecX*38}px,${vecY*38}px)`;
+    if (Math.abs(vecX) > 0.15 || Math.abs(vecY) > 0.15) hideHint();
+  }
+  function resetJoy(){
+    input.mx = 0; input.my = 0;
+    input.joyPointer = null;
+    const knob = document.getElementById('joyKnob');
+    if (knob) knob.style.transform = 'translate(0,0)';
+    const j = document.getElementById('joystick');
+    if (j && j.dataset.moved === '1'){
+      j.style.left = ''; j.style.top = ''; j.style.bottom = ''; j.style.transform = '';
+      j.dataset.moved = '0';
+    }
+  }
+
+  // Зона джойстика: круглая область вокруг видимого джойстика + запас.
+  // Всё, что вне этой зоны, — поворот головы (как в мобильных шутерах).
+  function pointInJoyZone(cx, cy, rect){
+    const j = document.getElementById('joystick');
+    if (!j) return false;
+    const r = j.getBoundingClientRect();
+    const jx = r.left + r.width/2, jy = r.top + r.height/2;
+    const zoneR = Math.max(r.width, 120) * 0.95;     // запас вокруг круга
+    return Math.hypot(cx - jx, cy - jy) <= zoneR;
+  }
+
+  // координаты джойстика: по умолчанию — видимый элемент; при «плавающем» режиме — точка касания
+  function joyOrigin(){
+    const j = document.getElementById('joystick');
+    if (!j) return null;
+    const r = j.getBoundingClientRect();
+    return { cx: r.left + r.width/2, cy: r.top + r.height/2, r: Math.max(38, r.width*0.46), el: j };
+  }
+
+  function bindInput(){
+    const wrap = document.getElementById('mineWrap') || eng.canvas;
+
+    /* ---------- POINTER EVENTS ---------- */
+    function onPointerDown(e){
+      if (!eng.running) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const j = document.getElementById('joystick');
+      const swingEl = e.target.closest && e.target.closest('#swingBtn');
+
+      // кнопка кирки
+      if (swingEl){
+        e.preventDefault();
+        startHoldSwing();
+        return;
+      }
+      if (isUI(e.target)) return;
+
+      const rect = wrap.getBoundingClientRect();
+      const inJoyZone = pointInJoyZone(e.clientX, e.clientY, rect);
+
+      // зона джойстика (низ-лево) -> движение; всё остальное -> обзор
+      if (inJoyZone){
+        if (input.joyPointer !== null) return;         // уже держим джойстик
+        input.joyPointer = e.pointerId;
+        try{ wrap.setPointerCapture(e.pointerId); }catch(err){}
+        // «плавающий» джойстик: центрируем на точке касания
+        if (j && e.target !== j && !(e.target.closest && e.target.closest('#joystick'))){
+          const size = j.offsetWidth || 112;
+          j.style.left = (e.clientX - rect.left - size/2) + 'px';
+          j.style.top  = (e.clientY - rect.top  - size/2) + 'px';
+          j.style.bottom = 'auto';
+          j.dataset.moved = '1';
+        }
+        const o = joyOrigin();
+        if (o) input._joy = o;
+        setJoy(0, 0);
+        hideHint();
+        e.preventDefault();
+        return;
+      }
+
+      // обзор / тап-удар
+      if (input.lookPointer !== null) return;
+      input.lookPointer = e.pointerId;
+      input.lookX = e.clientX; input.lookY = e.clientY;
+      input.lookMoved = 0; input.lookT = performance.now();
+      try{ wrap.setPointerCapture(e.pointerId); }catch(err){}
+      hideHint();
+      e.preventDefault();
+    }
+
+    function onPointerMove(e){
+      if (!eng.running) return;
+      // движение
+      if (input.joyPointer === e.pointerId){
+        const o = input._joy || joyOrigin();
+        if (!o) return;
+        let dx = e.clientX - o.cx, dy = e.clientY - o.cy;
+        const len = Math.hypot(dx, dy) || 1;
+        if (len > o.r){ dx = dx/len*o.r; dy = dy/len*o.r; }
+        setJoy(dx/o.r, dy/o.r);
+        e.preventDefault();
+        return;
+      }
+      // обзор (поворот головы)
+      if (input.lookPointer === e.pointerId){
+        const dx = e.clientX - input.lookX;
+        const dy = e.clientY - input.lookY;
+        input.lookVX += dx * LOOK_SENS_X;
+        input.lookVY += dy * LOOK_SENS_Y;
+        input.lookMoved += Math.abs(dx) + Math.abs(dy);
+        input.lookX = e.clientX; input.lookY = e.clientY;
+        e.preventDefault();
+      }
+    }
+
+    function onPointerUp(e){
+      if (input.joyPointer === e.pointerId){ resetJoy(); }
+      else if (input.lookPointer === e.pointerId){
+        const dt = performance.now() - input.lookT;
+        if (input.lookMoved < 10 && dt < 320){
+          eng.swing();                 // короткий тап = удар
+          input.stepQueued = 1;        // и маленький шаг вперёд
+        }
+        input.lookPointer = null;
+      }
+      if (e.target && e.target.closest && e.target.closest('#swingBtn')) stopHoldSwing();
+    }
+    function onPointerCancel(e){
+      if (input.joyPointer === e.pointerId) resetJoy();
+      if (input.lookPointer === e.pointerId) input.lookPointer = null;
+      stopHoldSwing();
+    }
+
+    /* ---------- кнопки поворота головы (гарантированный обзор) ---------- */
+    function bindTurnBtn(id, dir){
+      const el = document.getElementById(id);
+      if (!el) return;
+      const on = (e)=>{ e.preventDefault(); e.stopPropagation(); input.turn = dir; el.classList.add('on'); hideHint(); };
+      const off = (e)=>{ if (e) e.preventDefault(); input.turn = 0; el.classList.remove('on'); };
+      el.addEventListener('pointerdown', (e)=>{ on(e); try{ el.setPointerCapture(e.pointerId); }catch(err){} });
+      el.addEventListener('pointerup', off);
+      el.addEventListener('pointercancel', off);
+      el.addEventListener('pointerleave', off);
+      el.addEventListener('click', e=>e.preventDefault());
+    }
+    bindTurnBtn('turnLeft', -1);
+    bindTurnBtn('turnRight', 1);
+
+    /* ---------- D-pad: гарантированное движение стрелками ---------- */
+    const dpadState = { f:false, b:false, l:false, r:false };
+    function bindDpad(el){
+      if (!el) return;
+      const dir = el.dataset.dir;
+      const on = (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        dpadState[dir] = true; el.classList.add('on'); hideHint();
+      };
+      const off = (e)=>{
+        if (e) e.preventDefault();
+        dpadState[dir] = false; el.classList.remove('on');
+      };
+      el.addEventListener('pointerdown', (e)=>{ on(e); try{ el.setPointerCapture(e.pointerId); }catch(err){} });
+      el.addEventListener('pointerup', off);
+      el.addEventListener('pointercancel', off);
+      el.addEventListener('pointerleave', off);
+      el.addEventListener('touchstart', (e)=>{ if (!window.PointerEvent) on(e); }, {passive:false});
+      el.addEventListener('touchend', (e)=>{ if (!window.PointerEvent) off(e); }, {passive:false});
+      el.addEventListener('click', (e)=>e.preventDefault());
+    }
+    document.querySelectorAll('.dpad').forEach(bindDpad);
+    eng._dpad = dpadState;
+
+    /* ---------- кнопка кирки с удержанием ---------- */
+    let holdTimer = null;
+    function startHoldSwing(){
+      eng.swing();
+      if (holdTimer) clearInterval(holdTimer);
+      holdTimer = setInterval(()=>eng.swing(), 320);
+    }
+    function stopHoldSwing(){
+      if (holdTimer){ clearInterval(holdTimer); holdTimer = null; }
+    }
+    // дублируем на touch для старых iOS
+    const swingBtn = document.getElementById('swingBtn');
+    if (swingBtn && !window.PointerEvent){
+      swingBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); startHoldSwing(); }, {passive:false});
+      swingBtn.addEventListener('touchend', (e)=>{ e.preventDefault(); stopHoldSwing(); }, {passive:false});
+      swingBtn.addEventListener('touchcancel', stopHoldSwing);
+    }
+
+    if (window.PointerEvent){
+      wrap.addEventListener('pointerdown', onPointerDown, {passive:false});
+      window.addEventListener('pointermove', onPointerMove, {passive:false});
+      window.addEventListener('pointerup', onPointerUp, {passive:false});
+      window.addEventListener('pointercancel', onPointerCancel, {passive:false});
+      // запрет системных жестов внутри сцены
+      wrap.addEventListener('gesturestart', e=>e.preventDefault(), {passive:false});
+    } else {
+      /* ---------- ФОЛБЭК: touch events (iOS < 13) ---------- */
+      let touchId = null, touchMode = null;
+      wrap.addEventListener('touchstart', (e)=>{
+        const t = e.changedTouches[0];
+        const rect = wrap.getBoundingClientRect();
+        if (isUI(e.target)) return;
+        if (e.target.closest && e.target.closest('#swingBtn')){ startHoldSwing(); return; }
+        touchId = t.identifier;
+        if (pointInJoyZone(t.clientX, t.clientY, rect)){
+          touchMode = 'move';
+          const j = document.getElementById('joystick');
+          if (j){ const size = j.offsetWidth||112;
+            j.style.left = (t.clientX-rect.left-size/2)+'px';
+            j.style.top = (t.clientY-rect.top-size/2)+'px';
+            j.style.bottom='auto'; j.dataset.moved='1'; }
+          input._joy = joyOrigin();
+          setJoy(0,0);
+          hideHint();
+        } else {
+          touchMode = 'look';
+          input.lookX = t.clientX; input.lookY = t.clientY;
+          input.lookMoved = 0; input.lookT = performance.now();
+        }
+        e.preventDefault();
+      }, {passive:false});
+      wrap.addEventListener('touchmove', (e)=>{
+        for (const t of Array.from(e.changedTouches)){
+          if (t.identifier !== touchId) continue;
+          if (touchMode === 'move'){
+            const o = input._joy; if (!o) break;
+            let dx = t.clientX-o.cx, dy = t.clientY-o.cy;
+            const len = Math.hypot(dx,dy)||1;
+            if (len > o.r){ dx = dx/len*o.r; dy = dy/len*o.r; }
+            setJoy(dx/o.r, dy/o.r);
+          } else {
+            const dx = t.clientX - input.lookX, dy = t.clientY - input.lookY;
+            eng.player.a += dx*0.0055;
+            eng.pitch = clamp((eng.pitch||0)+dy*0.0015, -0.20, 0.20);
+            input.lookMoved += Math.abs(dx)+Math.abs(dy);
+            input.lookX = t.clientX; input.lookY = t.clientY;
+          }
+        }
+        e.preventDefault();
+      }, {passive:false});
+      wrap.addEventListener('touchend', (e)=>{
+        for (const t of Array.from(e.changedTouches)){
+          if (t.identifier !== touchId) continue;
+          if (touchMode === 'look'){
+            const dt = performance.now() - input.lookT;
+            if (input.lookMoved < 10 && dt < 320){ eng.swing(); input.stepQueued = 1; }
+          }
+          if (touchMode === 'move') resetJoy();
+          touchId = null; touchMode = null;
+        }
+        stopHoldSwing();
+      }, {passive:true});
+      wrap.addEventListener('touchcancel', ()=>{ resetJoy(); touchId=null; touchMode=null; stopHoldSwing(); }, {passive:true});
+    }
+
+    // мышь для теста на компьютере (если Pointer Events нет)
+    if (!window.PointerEvent){
+      wrap.addEventListener('mousedown', (e)=>{
+        const rect = wrap.getBoundingClientRect();
+        if (isUI(e.target)) return;
+        if (e.target.closest && e.target.closest('#swingBtn')){ startHoldSwing(); return; }
+        if (pointInJoyZone(e.clientX, e.clientY, rect)){
+          input.joyPointer = 'mouse';
+          input._joy = joyOrigin();
+          setJoy(0,0);
+        } else {
+          input.lookPointer = 'mouse'; input.lookX=e.clientX; input.lookY=e.clientY;
+          input.lookMoved=0; input.lookT=performance.now();
+        }
+      });
+      window.addEventListener('mousemove', (e)=>onPointerMove({pointerId: input.joyPointer || input.lookPointer, clientX:e.clientX, clientY:e.clientY, preventDefault(){}}));
+      window.addEventListener('mouseup', ()=>onPointerUp({pointerId: input.joyPointer || input.lookPointer, target:null}));
+    }
+
+    /* ---------- клавиатура (отладка на ПК) ---------- */
+    window.addEventListener('keydown', e=>{
+      if (!eng.running) return;
+      const k = e.key.toLowerCase();
+      if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+      if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
+      eng.keys[k] = true;
+      if (k===' ') eng.swing();
+      if (k==='e' || k==='escape'){ if (typeof uiExitMine === 'function') uiExitMine(); }
+    });
+    window.addEventListener('keyup', e=>{ eng.keys[e.key.toLowerCase()] = false; });
+
+    const c = eng.canvas;
+    if (c) c.addEventListener('contextmenu', e=>e.preventDefault());
+    document.addEventListener('contextmenu', (e)=>{ if (eng.running) e.preventDefault(); });
+  }
+
+  // шаг вперёд по взгляду (для «тап-идти»)
+  function stepForward(dist){
+    const p = eng.player;
+    const R = 0.36;
+    const free = (x,y)=> eng.grid.get(Math.floor(x), Math.floor(y)) === 0;
+    const nx = p.x + Math.cos(p.a)*dist;
+    const ny = p.y + Math.sin(p.a)*dist;
+    let moved = false;
+    if (free(nx - R, ny) && free(nx + R, ny) && free(nx, ny - R) && free(nx, ny + R)){ p.x = nx; p.y = ny; moved = true; }
+    return moved;
+  }
+  eng.stepForward = stepForward;
+
+  eng.bootInput = function(){ if (!eng._inputBound){ bindInput(); eng._inputBound = true; } };
+
+  eng.requestLock = function(){
+    try{
+      if (eng.canvas.requestPointerLock) eng.canvas.requestPointerLock();
+    }catch(e){}
+  };
+  eng.releaseLock = function(){
+    try{ if (document.pointerLockElement) document.exitPointerLock(); }catch(e){}
+  };
+
+  /* ---------- удар киркой ---------- */
+  eng.swing = function(){
+    if (!eng.running) return;
+    if (eng.swingT >= 0 && eng.swingT < 0.24) return;
+    eng.swingT = 0;
+    if (typeof sfxSwing === 'function') sfxSwing();
+    if (typeof state !== 'undefined' && state.energy < 1){
+      if (typeof toast === 'function') toast('⚡ Энергия на нуле — отдохните или используйте кристалл концентрации', 'bad');
+      eng.swingT = -1;
+      return;
+    }
+
+    const p = eng.player;
+    hideHint();
+    const hit = raycastWall(p.x, p.y, p.a, 2.4);
+    const res = game.swing(eng.loc);   // энергия тратится на каждый удар
+    if (res.type === 'noenergy'){
+      if (typeof toast === 'function') toast('⚡ Нет энергии — отдохните или купите кристалл концентрации', 'bad');
+      return;
+    }
+    if (typeof updateHUD === 'function') updateHUD();
+
+    if (!hit){
+      if (typeof onEngineHint === 'function') onEngineHint('Подойдите ближе к стене');
+      return;
+    }
+
+    if (hit.v === 2){
+      if (res.type === 'stone' || res.type === 'material' || res.type === 'full'){
+        // жила истощается и восстанавливается через время
+        eng.grid.set(hit.x, hit.y, 1);
+        eng.veins.set(hit.x+','+hit.y, performance.now() + 42000 + Math.random()*25000);
+        burst(hit.x+0.5, hit.y+0.5, eng.theme.accent, 20);
+        eng.shake = 0.16;
+        if (typeof onEngineFind === 'function') onEngineFind(res);
+      } else {
+        burst(hit.x+0.5, hit.y+0.5, '#7a6a55', 7);
+        if (typeof onEngineHint === 'function') onEngineHint('Пустая порода — попробуйте другую жилу');
+      }
+    } else {
+      burst(hit.x+0.5, hit.y+0.5, '#8a8377', 6);
+      if (typeof sfxDull === 'function') sfxDull();
+      if (typeof onEngineHint === 'function') onEngineHint('Глухая порода. Ищите светящиеся жилы!');
+    }
+  };
+
+  function hideHint(){
+    const hint = document.getElementById('mineHint');
+    if (hint && hint.style.opacity !== '0') hint.style.opacity = '0';
+  }
+  eng.hideHint = hideHint;
+  eng.hideHintSoon = (ms)=>{
+    clearTimeout(eng._hintT);
+    eng._hintT = setTimeout(hideHint, ms||1800);
+  };
+
+  // рейкаст по сетке: ищем первую стену
+  function raycastWall(px, py, ang, maxDist){
+    const dx = Math.cos(ang), dy = Math.sin(ang);
+    let x = Math.floor(px), y = Math.floor(py);
+    const stepX = dx>0?1:-1, stepY = dy>0?1:-1;
+    const tDeltaX = Math.abs(1/dx), tDeltaY = Math.abs(1/dy);
+    let tMaxX = dx>0 ? (x+1-px)/dx : (px-x)/(-dx);
+    let tMaxY = dy>0 ? (y+1-py)/dy : (py-y)/(-dy);
+    let dist = 0, side = 0;
+    for (let i=0;i<96;i++){
+      if (tMaxX < tMaxY){ dist = tMaxX; tMaxX += tDeltaX; x += stepX; side=0; }
+      else { dist = tMaxY; tMaxY += tDeltaY; y += stepY; side=1; }
+      if (dist > maxDist) return null;
+      const v = eng.grid.get(x,y);
+      if (v !== 0) return { x, y, v, dist, side };
+    }
+    return null;
+  }
+
+  function burst(wx, wy, color, n){
+    for (let i=0;i<n;i++){
+      eng.particles.push({
+        x: wx + (Math.random()-0.5)*0.5,
+        y: wy + (Math.random()-0.5)*0.5,
+        z: 0.35 + Math.random()*0.4,
+        vx: (Math.random()-0.5)*1.6,
+        vy: (Math.random()-0.5)*1.6,
+        vz: 1.2 + Math.random()*2.2,
+        life: 0.55 + Math.random()*0.5,
+        age: 0,
+        size: 1.5 + Math.random()*3,
+        color,
+      });
+    }
+  }
+
+  /* ---------- цикл ---------- */
+  let raf;
+  let _fatalShown = false;
+  function loop(now){
+    if (!eng.running) return;
+    raf = requestAnimationFrame(loop);
+    let dt = (now - eng.last)/1000;
+    if (!isFinite(dt) || dt < 0) dt = 0;
+    if (dt > 0.1) dt = 0.1;
+    eng.last = now;
+    try{
+      update(dt);
+      render(now);
+      updateMini();
+      eng.frames = (eng.frames||0) + 1;
+      eng.lastFrameAt = now;
+    }catch(err){
+      if (!_fatalShown){
+        _fatalShown = true;
+        console.error(err);
+        const box = document.createElement('div');
+        box.style.cssText = 'position:absolute;left:8px;right:8px;bottom:120px;z-index:50;background:#2a0f12;border:1px solid #ff6b6b;color:#ffb4b4;padding:10px;border-radius:10px;font-size:11px;line-height:1.4';
+        box.textContent = 'Ошибка отрисовки: ' + (err && err.message ? err.message : err) + '. Откройте игру в Safari/Telegram заново.';
+        (document.getElementById('mineWrap')||document.body).appendChild(box);
+      }
+    }
+  }
+
+  function update(dt){
+    const p = eng.player, k = eng.keys;
+    const speed = 2.6;
+
+    // ---- поворот головы: сглаживание + кнопки поворота + клавиатура ----
+    if (Math.abs(input.lookVX) > 1e-5 || Math.abs(input.lookVY) > 1e-5){
+      const kk = 1 - Math.pow(0.001, dt);        // плавное «доедание» поворота
+      p.a += input.lookVX * kk;
+      eng.pitch = clamp((eng.pitch||0) + input.lookVY * kk, -PITCH_MAX, PITCH_MAX);
+      input.lookVX *= (1 - kk);
+      input.lookVY *= (1 - kk);
+      if (Math.abs(input.lookVX) < 1e-4) input.lookVX = 0;
+      if (Math.abs(input.lookVY) < 1e-4) input.lookVY = 0;
+    }
+    if (input.turn){
+      p.a += input.turn * 2.2 * dt;               // кнопки поворота
+      hideHint();
+    }
+    if (k['q']) p.a -= 2.0*dt;
+    if (k['e'] && !k['shift']) p.a += 2.0*dt;
+    let mx = 0, my = 0;
+    const sin = Math.sin(p.a), cos = Math.cos(p.a);
+
+    // джойстик: my<0 — вперёд, mx>0 — вправо.
+    // В мировых координатах «вправо от взгляда» = (-sin a, +cos a).
+    if (Math.abs(input.mx) > 0.08 || Math.abs(input.my) > 0.08){
+      const f = -input.my, r = input.mx;
+      mx += cos*f - sin*r;
+      my += sin*f + cos*r;
+    }
+    // D-pad
+    if (eng._dpad){
+      const d = eng._dpad;
+      const f2 = (d.f?1:0) - (d.b?1:0);
+      const r2 = (d.r?1:0) - (d.l?1:0);
+      if (f2 || r2){ mx += cos*f2 - sin*r2; my += sin*f2 + cos*r2; }
+    }
+    // тап-шаг
+    if (input.stepQueued){
+      stepForward(0.42);
+      input.stepQueued = 0;
+    }
+    // клавиатура
+    const fwd = (k['w']||k['arrowup'])?1:0;
+    const back = (k['s']||k['arrowdown'])?1:0;
+    const left = (k['a']||k['arrowleft'])?1:0;
+    const right = (k['d']||k['arrowright'])?1:0;
+    if (fwd){ mx += cos; my += sin; }
+    if (back){ mx -= cos; my -= sin; }
+    if (left){ mx += sin; my -= cos; }
+    if (right){ mx -= sin; my += cos; }
+
+    const mlen = Math.hypot(mx, my);
+    if (mlen > 1){ mx /= mlen; my /= mlen; }
+    mx = mx*speed*dt; my = my*speed*dt;
+
+    // радиус игрока: не даём камере подойти к стене ближе ~0.36
+    const R = 0.36;
+    const free = (x, y)=> eng.grid.get(Math.floor(x), Math.floor(y)) === 0;
+    const canX = (nx, y)=>
+      free(nx - R, y) && free(nx + R, y) && free(nx - R, y - R*0.7) && free(nx + R, y - R*0.7) &&
+      free(nx - R, y + R*0.7) && free(nx + R, y + R*0.7);
+    const canY = (x, ny)=>
+      free(x, ny - R) && free(x, ny + R) && free(x - R*0.7, ny - R) && free(x + R*0.7, ny - R) &&
+      free(x - R*0.7, ny + R) && free(x + R*0.7, ny + R);
+    const tryMove = (nx, ny)=>{
+      if (canX(nx, p.y)) p.x = nx;
+      if (canY(p.x, ny)) p.y = ny;
+    };
+    if (mlen > 0.05){
+      tryMove(p.x+mx, p.y+my);
+      p.bob += dt*11;
+    } else {
+      p.bob += dt*2;
+    }
+
+    // частицы
+    for (let i=eng.particles.length-1;i>=0;i--){
+      const pt = eng.particles[i];
+      pt.age += dt;
+      if (pt.age >= pt.life){ eng.particles.splice(i,1); continue; }
+      pt.x += pt.vx*dt; pt.y += pt.vy*dt; pt.z += pt.vz*dt;
+      pt.vz -= 5.2*dt;
+      if (pt.z < 0.05){ pt.z = 0.05; pt.vz *= -0.3; }
+    }
+
+    if (eng.swingT >= 0){
+      eng.swingT += dt;
+      if (eng.swingT > 0.42) eng.swingT = -1;
+    }
+    if (eng.shake){ eng.shake = Math.max(0, eng.shake - dt*1.2); }
+
+    // регенерация жил
+    const now = performance.now();
+    for (const [key, t] of eng.veins){
+      if (now >= t){
+        const [x,y] = key.split(',').map(Number);
+        if (eng.grid.get(x,y)===1){ eng.grid.set(x,y,2); }
+        eng.veins.delete(key);
+      }
+    }
+    // иногда новая жила где-то рядом
+    if (Math.random() < dt/9){
+      const vc = eng.veinCells[Math.floor(Math.random()*eng.veinCells.length)];
+      if (vc && eng.grid.get(vc.x, vc.y)===1) eng.grid.set(vc.x, vc.y, 2);
+    }
+  }
+
+  /* ---------- рендер ---------- */
+  const shadeCache = new Map();
+  function shadedTex(name, q){
+    const key = name + '_' + q;
+    let c = shadeCache.get(key);
+    if (c) return c;
+    const src = eng.tex[name];
+    c = document.createElement('canvas');
+    c.width = src.width; c.height = src.height;
+    const g = c.getContext('2d');
+    g.drawImage(src, 0, 0);
+    g.globalCompositeOperation = 'source-atop';
+    g.fillStyle = `rgba(4,6,10,${(q/20)*0.88})`;
+    g.fillRect(0, 0, c.width, c.height);
+    shadeCache.set(key, c);
+    return c;
+  }
+
+  function render(now){
+    const ctx = eng.ctx, W = eng.W, H = eng.H, p = eng.player, th = eng.theme;
+    if (!eng.z || eng.z.length !== Math.ceil(W/2)) eng.z = new Float32Array(Math.ceil(W/2));
+    const focal = W*0.72;
+    const horizon = H*0.5 + Math.sin(p.bob*0.6)*2.2 + (eng.pitch||0)*H*0.75;
+
+    // фон: верх/низ
+    let grd = ctx.createLinearGradient(0,0,0,horizon);
+    grd.addColorStop(0, th.ceilD);
+    grd.addColorStop(1, th.fog);
+    ctx.fillStyle = grd; ctx.fillRect(0,0,W,horizon+2);
+    grd = ctx.createLinearGradient(0,horizon,0,H);
+    grd.addColorStop(0, th.fog);
+    grd.addColorStop(1, th.floor);
+    ctx.fillStyle = grd; ctx.fillRect(0,horizon,W,H-horizon+2);
+
+    // свет шахтёрской лампы на полу
+    const lampR = Math.max(W,H)*0.62;
+    const lamp = ctx.createRadialGradient(W/2, H*0.78, 0, W/2, H*0.78, lampR);
+    lamp.addColorStop(0, 'rgba(255,224,170,0.10)');
+    lamp.addColorStop(0.45, 'rgba(255,214,150,0.045)');
+    lamp.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = lamp; ctx.fillRect(0,0,W,H);
+
+    // точки-параллакс на полу
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    for (const d of eng.dotsFloor){
+      const rel = d.ang - p.a;
+      if (Math.cos(rel) <= 0.05) continue;
+      const sx = W/2 + Math.tan(rel)*focal*0.55;
+      if (sx < -20 || sx > W+20) continue;
+      const sy = horizon + (H*0.48)*(1/d.dist)*1.9*0.9;
+      if (sy > H || sy < horizon) continue;
+      const s = clamp(3.2/(d.dist*0.5+0.7), 0.4, 3.2) * d.s;
+      ctx.fillStyle = d.sh > 0.2 ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.35)';
+      ctx.fillRect(sx, sy, s, s*0.8);
+    }
+    for (const d of eng.dotsCeil){
+      const rel = d.ang - p.a;
+      if (Math.cos(rel) <= 0.05) continue;
+      const sx = W/2 + Math.tan(rel)*focal*0.55;
+      if (sx < -20 || sx > W+20) continue;
+      const sy = horizon - (H*0.42)*(1/d.dist)*1.9*0.9;
+      if (sy < 0 || sy > horizon) continue;
+      const s = clamp(3.2/(d.dist*0.5+0.7), 0.4, 3.4) * d.s;
+      ctx.fillStyle = 'rgba(255,255,255,0.055)';
+      ctx.fillRect(sx, sy, s, s);
+    }
+    ctx.restore();
+
+    // стены (DDA по колонкам, батчинг по текстурам)
+    const cols = Math.ceil(W/2);
+    const camX = Math.cos(p.a), camY = Math.sin(p.a);
+    const planeX = -camY * (W/H) * 0.66, planeY = camX * (W/H) * 0.66;
+    const batches = new Map();
+    const shakeX = eng.shake ? (Math.random()-0.5)*eng.shake*H*0.12 : 0;
+
+    for (let i=0;i<cols;i++){
+      const cameraX = 2*i/cols - 0.95;
+      const rayX = camX + planeX*cameraX;
+      const rayY = camY + planeY*cameraX;
+      let mapX = Math.floor(p.x), mapY = Math.floor(p.y);
+      const dX = Math.abs(1/rayX), dY = Math.abs(1/rayY);
+      let sx2, sy2, sdx, sdy;
+      if (rayX<0){ sdx=-1; sx2=(p.x-mapX)*dX; } else { sdx=1; sx2=(mapX+1-p.x)*dX; }
+      if (rayY<0){ sdy=-1; sy2=(p.y-mapY)*dY; } else { sdy=1; sy2=(mapY+1-p.y)*dY; }
+      let side = 0, hit = 0, val = 0, guard = 0;
+      while (!hit && guard++ < 128){
+        if (sx2 < sy2){ sx2 += dX; mapX += sdx; side=0; }
+        else { sy2 += dY; mapY += sdy; side=1; }
+        if (mapX<0||mapY<0||mapX>=MAP_W||mapY>=MAP_H){ val=1; break; }
+        val = eng.grid.map[mapY*MAP_W + mapX];
+        if (val !== 0) hit = 1;
+      }
+      const perp = Math.max(0.18, side===0 ? (sx2-dX) : (sy2-dY));
+      eng.z[i] = perp;
+      const lineH = H/perp;
+      const top = horizon - lineH*0.5 + shakeX;
+
+      let wallX;
+      if (side===0) wallX = p.y + perp*rayY; else wallX = p.x + perp*rayX;
+      wallX -= Math.floor(wallX);
+
+      const isGem = (val===2);
+      const lightsrc = clamp(1.85/(1+perp*0.52) + 0.16, 0.08, 1.35);
+      const flick = 0.93 + 0.07*Math.sin(now*0.003 + i*0.35);
+      const shade = clamp(lightsrc*(side===1?0.78:1)*flick, 0, 1);
+      let name;
+      if (isGem) name = ((Math.floor(wallX*4)%2) ? 'gem2' : 'gem');
+      else name = ((mapX+mapY)%3 ? 'wall' : 'wall2');
+      const q = Math.min(20, Math.round((1-shade)*20));
+      const tex = shadedTex(name, q);
+      const texX = Math.floor(wallX*(tex.width-1));
+
+      let arr = batches.get(tex);
+      if (!arr){ arr = []; batches.set(tex, arr); }
+      arr.push(i*2.2, top, 2.4, lineH, texX);
+    }
+
+    for (const [tex, arr] of batches){
+      const th2 = tex.height;
+      for (let k=0;k<arr.length;k+=5){
+        ctx.drawImage(tex, arr[k+4], 0, 1, th2, arr[k], arr[k+1], arr[k+2], arr[k+3]);
+      }
+    }
+
+    // спрайты-частицы (с проверкой z)
+    drawParticles(ctx, W, H, focal, horizon);
+
+    // виньетка
+    const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.30, W/2, H/2, Math.max(W,H)*0.78);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.46)');
+    ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+
+    // прицел
+    ctx.save();
+    const cxp = W/2, cyp = horizon;
+    const tgt = raycastWall(p.x, p.y, p.a, 2.2);
+    const onVein = !!(tgt && tgt.v===2);
+    ctx.strokeStyle = onVein ? 'rgba(255,215,120,0.95)' : 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(cxp-7,cyp); ctx.lineTo(cxp-2,cyp);
+    ctx.moveTo(cxp+2,cyp); ctx.lineTo(cxp+7,cyp);
+    ctx.moveTo(cxp,cyp-7); ctx.lineTo(cxp,cyp-2);
+    ctx.moveTo(cxp,cyp+2); ctx.lineTo(cxp,cyp+7);
+    ctx.stroke();
+    if (onVein){
+      ctx.fillStyle = 'rgba(255,220,120,0.95)';
+      ctx.beginPath(); ctx.arc(cxp,cyp,2.6,0,TAU); ctx.fill();
+    }
+    ctx.restore();
+
+    drawPickaxe(ctx, W, H);
+
+    // винтетка
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillRect(0,0,W,3); ctx.fillRect(0,H-3,W,3);
+  }
+
+  function drawParticles(ctx, W, H, focal, horizon){
+    const p = eng.player;
+    for (const pt of eng.particles){
+      const dx = pt.x - p.x, dy = pt.y - p.y;
+      const dist = Math.hypot(dx,dy);
+      if (dist < 0.05) continue;
+      let ang = Math.atan2(dy,dx) - p.a;
+      while (ang > Math.PI) ang -= TAU;
+      while (ang < -Math.PI) ang += TAU;
+      if (Math.abs(ang) > 1.2) continue;
+      const sx = W/2 + Math.tan(ang)*focal*0.55;
+      if (sx < 0 || sx > W) continue;
+      const col = Math.floor(sx/2);
+      if (eng.z && eng.z[col] !== undefined && dist > eng.z[col]) continue;
+      const sz = clamp((1 - pt.z)*H*0.5/dist*0.35, 0.5, 26);
+      const sy = horizon + (0.5 - pt.z)*H*0.6/dist*1.6;
+      const a = clamp(1 - pt.age/pt.life, 0, 1);
+      ctx.globalAlpha = a*0.95;
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(sx, sy, sz*0.4, 0, TAU);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawPickaxe(ctx, W, H){
+    const s = clamp(Math.min(H/780, W/560), 0.42, 0.95);
+    const t = eng.swingT;
+    const bx = W*0.80, by = H + 175*s;
+    if (t < 0){
+      const bob = Math.sin(eng.player.bob)*5*s;
+      drawPickShape(ctx, bx, by + bob, -0.35, false, 0, s);
+    } else {
+      const k = t/0.42;
+      const sw = Math.sin(Math.min(1,k*1.6)*Math.PI);
+      drawPickShape(ctx, bx - sw*W*0.11, by - sw*130*s, -0.35 + sw*1.05, true, sw, s);
+    }
+  }
+  function drawPickShape(ctx, x, y, angle, active, power, s){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s||1, s||1);
+    ctx.rotate(angle + (power||0)*0.4);
+    // рукоять
+    const g = ctx.createLinearGradient(0,0,0,-260);
+    g.addColorStop(0,'#5a4128'); g.addColorStop(0.5,'#8a6540'); g.addColorStop(1,'#6b4c2e');
+    ctx.fillStyle = g;
+    ctx.fillRect(-14,-330,28,330);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(6,-330,4,330);
+    // обмотка
+    ctx.fillStyle = '#3d2c1a';
+    for (let i=0;i<7;i++) ctx.fillRect(-15,-150+i*16,30,6);
+    // голова кирки
+    ctx.translate(0,-330);
+    ctx.rotate(-0.15);
+    const gg = ctx.createLinearGradient(-90,0,90,0);
+    gg.addColorStop(0,'#7e8a95'); gg.addColorStop(0.45,'#d6e0e8'); gg.addColorStop(0.55,'#aab6c0'); gg.addColorStop(1,'#66727d');
+    ctx.fillStyle = gg;
+    ctx.beginPath();
+    ctx.moveTo(-96,-4);
+    ctx.quadraticCurveTo(-70,-34, -18,-22);
+    ctx.lineTo(18,-22);
+    ctx.quadraticCurveTo(70,-34, 96,-4);
+    ctx.quadraticCurveTo(70,10, 18,2);
+    ctx.lineTo(-18,2);
+    ctx.quadraticCurveTo(-70,10,-96,-4);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(20,25,32,0.5)'; ctx.lineWidth = 2; ctx.stroke();
+    if (active){
+      ctx.fillStyle = 'rgba(255,240,180,0.95)';
+      ctx.beginPath(); ctx.arc(96,-4, 5+(power||0)*5, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.beginPath(); ctx.arc(96,-4, 10+(power||0)*8, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* ---------- миникарта ---------- */
+  let miniCtx = null;
+  function updateMini(){
+    if (!eng.mini) return;
+    if (!miniCtx) miniCtx = eng.mini.getContext('2d');
+    const g = miniCtx, S = eng.mini.width, R = 10, cell = S/(R*2+1), p = eng.player;
+    g.clearRect(0,0,S,S);
+    g.fillStyle = 'rgba(4,6,10,0.72)';
+    g.fillRect(0,0,S,S);
+    for (let dy=-R;dy<=R;dy++){
+      for (let dx=-R;dx<=R;dx++){
+        const x = Math.floor(p.x)+dx, y = Math.floor(p.y)+dy;
+        if (x<0||y<0||x>=MAP_W||y>=MAP_H) continue;
+        const v = eng.grid.map[y*MAP_W+x];
+        const px = S/2 + dx*cell, py = S/2 + dy*cell;
+        if (v===0){ g.fillStyle='rgba(70,80,95,0.35)'; }
+        else if (v===2){ g.fillStyle = eng.theme.accent; }
+        else { g.fillStyle='rgba(20,24,32,0.9)'; }
+        g.fillRect(px,py,cell-0.7,cell-0.7);
+      }
+    }
+    // игрок
+    g.save();
+    g.translate(S/2, S/2);
+    g.rotate(p.a + Math.PI/2);
+    g.fillStyle = '#ffd166';
+    g.beginPath(); g.moveTo(0,-5); g.lineTo(4,4); g.lineTo(-4,4); g.closePath(); g.fill();
+    g.restore();
+  }
+
+  window.engine = eng;
+})();
+
+/* ==================== js/ui.js ==================== */
+/* =========================================================
+   КАМЕННЫЙ ПУТЬ — интерфейс
+   ========================================================= */
+'use strict';
+
+let currentTab = 'home';
+let mineLoc = null;
+const ui = { sel:{}, jewelCrystal:null, jewelType:'ring', marketTab:'stones', bagTab:'stones' };
+
+const TABS = [
+  { id:'home',   icon:'🏙️', label:'Город' },
+  { id:'mine',   icon:'⛏️', label:'Шахты' },
+  { id:'bag',    icon:'🎒', label:'Сумка' },
+  { id:'lap',    icon:'💎', label:'Огранка' },
+  { id:'jewel',  icon:'💍', label:'Ювелир' },
+  { id:'forge',  icon:'⚔️', label:'Кузница' },
+  { id:'museum', icon:'🏛️', label:'Музей' },
+  { id:'orders', icon:'📦', label:'Заказы' },
+  { id:'market', icon:'🧾', label:'Скупка' },
+  { id:'shop',   icon:'🪙', label:'Магазин' },
+];
+
+const GEM_COLORS = {
+  amethyst:['#f3e8ff','#a855f7','#6d28d9'],
+  topaz:['#fef3c7','#f59e0b','#b45309'],
+  emerald:['#d1fae5','#10b981','#047857'],
+  sapphire:['#dbeafe','#3b82f6','#1d4ed8'],
+  ruby:['#fee2e2','#ef4444','#991b1b'],
+  diamond:['#ffffff','#e2e8f0','#94a3b8'],
+  star:['#fef9c3','#facc15','#a16207'],
+};
+
+function $(q){ return document.querySelector(q); }
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function pct(v){ return Math.round(v*100)+'%'; }
+
+function gemHTML(key, size, extra){
+  const c = GEM_COLORS[key] || GEM_COLORS.amethyst;
+  return `<span class="gem" style="--s:${size||40}px;--g1:${c[0]};--g2:${c[1]};--g3:${c[2]};--glow:${c[1]}77"></span>`;
+}
+function qColor(qid){
+  const q = QUALITY.find(x=>x.id===qid);
+  return q ? q.color : '#b9c2d0';
+}
+function qName(qid){
+  const q = QUALITY.find(x=>x.id===qid);
+  return q ? q.name : '—';
+}
+
+/* ================= TOASTS / MODAL ================= */
+let toastCount = 0;
+function toast(msg, type){
+  const box = document.getElementById('toasts');
+  if (!box) return;
+  const d = document.createElement('div');
+  d.className = 'toast ' + (type||'');
+  d.innerHTML = msg;
+  box.appendChild(d);
+  toastCount++;
+  while (box.children.length > 3) box.removeChild(box.firstChild);
+  setTimeout(()=>{ d.style.transition='opacity .35s, transform .35s'; d.style.opacity='0'; d.style.transform='translateY(6px)'; }, 1900);
+  setTimeout(()=>{ if (d.parentNode) d.parentNode.removeChild(d); }, 2300);
+}
+let _modalSticky = false;
+function openModal(html, opts){
+  const back = document.getElementById('modalBack');
+  const box = document.getElementById('modalBox');
+  box.innerHTML = html;
+  _modalSticky = !!(opts && opts.sticky);
+  back.classList.add('open');
+}
+function closeModal(){ const b=document.getElementById('modalBack'); if (b) b.classList.remove('open'); }
+window.closeModal = closeModal;
+
+/* ================= HUD ================= */
+function updateHUD(){
+  const s = state;
+  const set = (id, v)=>{ const e = document.getElementById(id); if (e) e.innerHTML = v; };
+  set('hudMoney', fmtMoney(s.money));
+  set('hudCoins', Math.floor(s.coins) + ' 🪙');
+  set('hudTickets', Math.floor(s.tickets) + ' 🎟️');
+  set('enVal', Math.floor(s.energy));
+  set('lvlVal', s.level);
+  const me = maxEnergyNow();
+  const e1 = document.getElementById('enBar'); if (e1) e1.style.width = Math.round(clamp(s.energy/me,0,1)*100)+'%';
+  const e2 = document.getElementById('enVal2'); if (e2) e2.textContent = Math.floor(s.energy);
+  const e3 = document.getElementById('enMax2'); if (e3) e3.textContent = me;
+  const e4 = document.getElementById('enBar2'); if (e4) e4.style.width = Math.round(clamp(s.energy/me,0,1)*100)+'%';
+  const xb = document.getElementById('xpBar'); if (xb) xb.style.width = Math.round(s.xp/xpToNext()*100)+'%';
+  const mic = document.getElementById('mineInvCount'); if (mic) mic.textContent = invCount();
+  const mb = document.getElementById('mineBag'); if (mb) mb.textContent = invCount();
+  const lvl = document.getElementById('hudLevel');
+  if (lvl) lvl.title = `Опыт: ${Math.floor(s.xp)} / ${xpToNext()}`;
+}
+
+function buildTabs(){
+  const nav = document.getElementById('tabs');
+  nav.innerHTML = TABS.map(t=>
+    `<div class="tab${t.id===currentTab?' active':''}" data-tab="${t.id}"><span class="ic">${t.icon}</span>${t.label}<span class="badge" data-badge="${t.id}" style="display:none"></span></div>`
+  ).join('');
+  nav.onclick = (e)=>{
+    const el = e.target.closest('[data-tab]');
+    if (!el) return;
+    if (typeof sfxClick === 'function') sfxClick();
+    switchTab(el.dataset.tab);
+  };
+}
+function updateBadges(){
+  const ord = state.orders.filter(o=>game.canFulfillOrder(o)).length;
+  const bag = document.querySelector('[data-badge="orders"]');
+  if (bag){ bag.style.display = ord? 'inline-block':'none'; bag.textContent = ord; }
+  const inv = document.querySelector('[data-badge="bag"]');
+  if (inv){ const n = invCount(); inv.style.display = n? 'inline-block':'none'; inv.textContent = n; }
+}
+
+/* ================= NAV ================= */
+function switchTab(id){
+  currentTab = id;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===id));
+  ['screen-city','screen-tab','screen-mine'].forEach(x=>document.getElementById(x).classList.remove('active'));
+  if (id==='home') document.getElementById('screen-city').classList.add('active');
+  else document.getElementById('screen-tab').classList.add('active');
+  render();
+  document.getElementById('main').scrollTop = 0;
+}
+
+function render(){
+  const root = currentTab==='home' ? document.getElementById('cityRoot') : document.getElementById('tabRoot');
+  if (!root) return;
+  switch(currentTab){
+    case 'home':   root.innerHTML = viewHome(); break;
+    case 'mine':   root.innerHTML = viewMines(); break;
+    case 'bag':    root.innerHTML = viewBag(); break;
+    case 'lap':    root.innerHTML = viewLap(); break;
+    case 'jewel':  root.innerHTML = viewJewel(); break;
+    case 'forge':  root.innerHTML = viewForge(); break;
+    case 'museum': root.innerHTML = viewMuseum(); break;
+    case 'orders': root.innerHTML = viewOrders(); break;
+    case 'market': root.innerHTML = viewMarket(); break;
+    case 'shop':   root.innerHTML = viewShop(); break;
+  }
+  updateHUD(); updateBadges();
+}
+window.render = render;
+
+/* ================= VIEW: HOME ================= */
+function viewHome(){
+  const s = state;
+  const inv = invCount();
+  const rate = ticketsRate();
+  const museumRoom = museumHasRoom();
+  const canOrd = s.orders.filter(o=>game.canFulfillOrder(o)).length;
+  const uniq = (arr, f)=> new Set(arr.map(f)).size;
+
+  const tips = [
+    'Бейте киркой по <b>светящимся жилам</b> — только они дают камни.',
+    'Крупные куски одного камня складывайте в <b>огранку</b> — 3 куска аметиста дают один кристалл.',
+    'Выставляйте лучшие камни в <b>музей</b>: каждый экспонат +2% к цене продажи.',
+    'Музей приносит <b>билеты</b> — они нужны, чтобы спускаться глубже в Великую Дыру.',
+    'Заказы выгоднее скупки: следите за бейджем на вкладке «Заказы».',
+  ];
+  const tip = tips[Math.floor(Date.now()/60000) % tips.length];
+
+  return `<div class="hero">
+    <h1>⛰️ Каменный путь</h1>
+    <p>Шахтёрский городок живёт камнем: добывай, грани, вставляй в серебро и золото, куй клинки и открывай новые горизонты — вплоть до <b class="info">Великой Дыры</b> в Кимберли.</p>
+    <div class="row">
+      <button class="btn gold lg" data-act="goto-mine">⛏️ В шахту</button>
+      <button class="btn lg" data-act="tab" data-tabid="lap">💎 Огранка</button>
+      <button class="btn lg" data-act="tab" data-tabid="market">🧾 Скупка</button>
+      <button class="btn ghost lg" data-act="help">❓ Как играть</button>
+    </div>
+    <div class="glowline"></div>
+  </div>
+
+  <div class="grid g4" style="margin-bottom:14px">
+    <div class="stat-tile"><div class="k">Уровень шахтёра</div><div class="v">🏅 ${s.level} <span class="small muted">/ опыт ${Math.floor(s.xp)}/${xpToNext()}</span></div></div>
+    <div class="stat-tile"><div class="k">Камней в сумке</div><div class="v">🪨 ${inv} <span class="small muted">/ ${GAME.INVENTORY_CAP}</span></div></div>
+    <div class="stat-tile"><div class="k">Кристаллов</div><div class="v">💎 ${s.crystals.length}</div></div>
+    <div class="stat-tile"><div class="k">Украшений и мечей</div><div class="v">💍 ${s.jewelry.length + s.swords.length}</div></div>
+    <div class="stat-tile"><div class="k">Музей</div><div class="v">🏛️ ${s.museum.length}<span class="small muted">/${MUSEUM_SLOTS + s.counters}</span></div></div>
+    <div class="stat-tile"><div class="k">Билеты музея</div><div class="v">🎟️ ${Math.floor(s.tickets)} <span class="small muted">+${rate.toFixed(1)}/с</span></div></div>
+    <div class="stat-tile"><div class="k">Бонус к ценам</div><div class="v">📈 +${Math.round((sellBonus()-1)*100)}%</div></div>
+    <div class="stat-tile"><div class="k">Заказы к сдаче</div><div class="v">📦 ${canOrd}</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>⚡ Быстрый статус</h2>
+    <div class="grid g2">
+      <div>
+        <div class="row between small" style="margin-bottom:6px"><span class="muted">Энергия</span><b>${Math.floor(s.energy)} / ${maxEnergyNow()}</b></div>
+        <div class="bar gold"><i style="width:${Math.round(s.energy/maxEnergyNow()*100)}%"></i></div>
+        <div class="tiny muted" style="margin-top:6px">+1 энергии каждые ${Math.round(GAME.ENERGY_REGEN_SEC/60)} мин · максимум растёт с уровнем</div>
+      </div>
+      <div>
+        <div class="row between small" style="margin-bottom:6px"><span class="muted">Опыт до уровня ${s.level+1}</span><b>${Math.floor(s.xp)} / ${xpToNext()}</b></div>
+        <div class="bar"><i style="width:${Math.round(s.xp/xpToNext()*100)}%"></i></div>
+        <div class="tiny muted" style="margin-top:6px">Удача: +${game.luckNow().toFixed(1)} · лампы: ${s.lamps}/${LAMP_MAX}${s.vip?' · ⭐ VIP':''}</div>
+      </div>
+    </div>
+    <hr>
+    <div class="row between">
+      <div class="small muted">💡 ${tip}</div>
+      <button class="btn sm ghost" data-act="help">Все подсказки</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🏆 Достижения <span class="chip">${s.achievements.length} / ${ACHIEVEMENTS.length}</span></h2>
+    <div class="grid g3">
+      ${ACHIEVEMENTS.map(a=>{
+        const done = s.achievements.includes(a.id);
+        return `<div class="list-item" style="${done?'border-color:#2c6b46':''}">
+          <div style="font-size:19px; filter:${done?'none':'grayscale(1) opacity(.45)'}">${done?'🏆':'🔒'}</div>
+          <div class="grow"><div class="t">${a.name}</div><div class="s">${a.desc}</div></div>
+          <div class="chip ${done?'good':''}">${done?'получено':game.fmtMoney(a.money)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>📇 Коллекция «Экспонаты года» <span class="chip">${s.rewardsDone.length} / ${EXHIBITS.length}</span></h2>
+    <p class="sub">Личные рекорды и вехи. За каждый — денежная награда.</p>
+    <div class="grid g3">
+      ${EXHIBITS.map(e=>{
+        const done = s.rewardsDone.includes(e.id);
+        return `<div class="list-item" style="${done?'border-color:#4a3a6b; background:rgba(192,132,252,.06)':''}">
+          <div style="font-size:19px">${done?e.icon:'🔒'}</div>
+          <div class="grow"><div class="t">${e.name}</div><div class="s">${e.desc}</div></div>
+          <div class="chip ${done?'purple':''}">${done?'✓':game.fmtMoney(e.money)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ================= VIEW: MINES ================= */
+function viewMines(){
+  const s = state;
+  return `<h1>⛏️ Шахты и рудники</h1>
+  <p class="sub">Каждая шахта — новый камень и новая цена. Внизу — джойстик и кнопка кирки. Легенда: <b>Великая Дыра</b> в Кимберли открывается при 2 лампах и 18 000 ₽.</p>
+  <div class="grid g2">
+  ${Object.keys(HOSTS).map(key=>{
+    const h = HOSTS[key];
+    const opened = s.unlocked.includes(key);
+    const canOpen = !opened && s.money>=h.unlock && s.lamps>=h.lampReq;
+    const th = { purple:'#a855f7', gold:'#f59e0b', green:'#10b981', blue:'#3b82f6', ice:'#bae6fd' }[h.theme];
+    const yields = Object.keys(h.yield).map(k=>{
+      const t = STONE_TYPES[k] || MATERIALS[k];
+      return `<span class="chip">${t.icon} ${t.name}</span>`;
+    }).join(' ');
+    return `<div class="mine-card ${opened?'':'locked'}">
+      <div class="th" style="background:linear-gradient(90deg,${th},transparent)"></div>
+      <div class="glow" style="background:radial-gradient(ellipse at top left, ${th}22, transparent 70%)"></div>
+      <div class="row between" style="align-items:flex-start">
+        <div>
+          <div class="nm">${h.name}</div>
+          <div class="small muted">${key==='kimberly'?'Алмазы, звёздные камни, много руды':'Основной доход: ' + (STONE_TYPES[Object.keys(h.yield)[0]]||{}).name}</div>
+        </div>
+        ${opened?'<span class="chip good">Открыта</span>':`<span class="chip">🔒 ${game.fmtMoney(h.unlock)}</span>`}
+      </div>
+      <div class="chips">${yields}</div>
+      ${key==='kimberly'?`<div class="tiny muted" style="margin-bottom:8px">Требуется ${h.lampReq} лампы шахтёра · сектор: <b class="info">${KIMBERLY_SECTORS[s.sector].name}</b> (×${KIMBERLY_SECTORS[s.sector].mult} к размеру камней)</div>`:''}
+      <div class="row">
+        ${opened?`<button class="btn gold" data-act="enter" data-loc="${key}">Спуститься ⛏️</button>`:''}
+        ${!opened?`<button class="btn ${canOpen?'green':''}" data-act="unlock-mine" data-loc="${key}" ${canOpen?'':'disabled'}>Открыть за ${game.fmtMoney(h.unlock)}</button>`:''}
+        ${!opened && h.lampReq && s.lamps<h.lampReq?`<span class="tiny warn">Нужно ламп: ${h.lampReq} (купить в магазине)</span>`:''}
+      </div>
+      ${key==='kimberly' && opened ? renderSectors() : ''}
+    </div>`;
+  }).join('')}
+  </div>`;
+}
+
+function renderSectors(){
+  const s = state;
+  return `<hr>
+  <div class="row between" style="margin-bottom:8px">
+    <b class="small">🕳️ Секторы Великой Дыры</b>
+    <span class="chip info">🎟️ ${Math.floor(s.tickets)} билетов</span>
+  </div>
+  ${KIMBERLY_SECTORS.map((sec,i)=>{
+    const open = i < s.sectorOpen;
+    const active = s.sector===i && open;
+    return `<div class="list-item" style="${active?'border-color:#2c6b46;background:rgba(87,217,138,.07)':''}">
+      <div style="font-weight:800; color:${open?'#57d98a':'#8c98ac'}">${i+1}</div>
+      <div class="grow"><div class="t">${sec.name}</div><div class="s">размер камней ×${sec.mult}</div></div>
+      ${open?`<button class="btn sm ${active?'green':'ghost'}" data-act="sector" data-i="${i}">${active?'Вы здесь':'Спуститься'}</button>`:''}
+    </div>`;
+  }).join('')}
+  ${s.sectorOpen < KIMBERLY_SECTORS.length ? `
+    <button class="btn blue block" data-act="unlock-sector" ${s.tickets>=game.sectorCost()?'':'disabled'}>
+      🕳️ Открыть сектор «${KIMBERLY_SECTORS[s.sectorOpen].name}» за 🎟️ ${Math.round(game.sectorCost())}
+    </button>` : `<div class="chip good">Все сектора открыты — вы на дне мира</div>`}`;
+}
+
+/* ================= VIEW: BAG ================= */
+function viewBag(){
+  const s = state;
+  const stoneKeys = Object.keys(s.inventory).filter(k=>(s.inventory[k]||[]).length>0);
+  const matKeys = Object.keys(s.materials).filter(k=>k!=='focus' && (s.materials[k]||0)>0);
+  const total = invCount();
+
+  const stonesHTML = stoneKeys.length ? stoneKeys.map(key=>{
+    const arr = s.inventory[key].slice().sort((a,b)=>b.size-a.size);
+    const t = STONE_TYPES[key];
+    const sel = ui.sel[key] || new Set();
+    const selSum = arr.filter(x=>sel.has(x.id)).reduce((a,x)=>a+game.stoneValue(key,x.size,1,false),0);
+    const canG = arr.length >= t.parts;
+    const shown = arr.slice(0,20);
+    return `<div class="stone-card">
+      <div class="head">
+        ${gemHTML(key,34)}
+        <div style="flex:1">
+          <div class="nm">${t.icon} ${t.name} <span class="chip">${arr.length} шт</span></div>
+          <div class="meta">макс. ${arr[0].size} кт · скупка: ${game.fmtMoney(game.stoneValue(key, arr[0].size,1,false))} за крупнейший</div>
+        </div>
+      </div>
+      <div class="chips">
+        ${shown.map(x=>`<span class="chunk ${sel.has(x.id)?'sel':''}" data-act="sel-stone" data-key="${key}" data-id="${x.id}">${x.size} кт</span>`).join('')}
+        ${arr.length>20?`<span class="chunk">+${arr.length-20}…</span>`:''}
+      </div>
+      <div class="row">
+        <button class="btn sm ${canG?'purple':'ghost'}" data-act="grade" data-key="${key}" ${canG?'':'disabled'}>💎 Огранить (${t.parts}+ кусков${game.gradingFee(key)?', '+game.fmtMoney(game.gradingFee(key)):''})</button>
+        ${sel.size?`<button class="btn sm gold" data-act="sell-sel" data-key="${key}">Продать выбранные · ${game.fmtMoney(selSum)}</button>`:''}
+        <button class="btn sm ghost" data-act="sell-all-type" data-key="${key}">Продать все</button>
+      </div>
+    </div>`;
+  }).join('') : `<div class="panel center muted">Сумка пуста. <button class="btn gold sm" data-act="goto-mine">В шахту ⛏️</button></div>`;
+
+  return `<h1>🎒 Сумка <span class="chip">${total} / ${GAME.INVENTORY_CAP}</span></h1>
+  <p class="sub">Сырые камни можно сразу продать в скупку или огранить — огранка обычно выгоднее в 2–4 раза.</p>
+  <div class="grid g2">${stonesHTML}</div>
+
+  <div class="panel" style="margin-top:14px">
+    <h2>🪨 Руда и материалы</h2>
+    ${matKeys.length ? `<div class="grid g3">
+      ${matKeys.map(k=>{
+        const m = MATERIALS[k];
+        return `<div class="list-item">
+          <div style="font-size:20px">${m.icon}</div>
+          <div class="grow"><div class="t">${m.name}</div><div class="s">×${s.materials[k]} · цена ${game.fmtMoney(game.materialPrice(k))}</div></div>
+          <button class="btn sm gold" data-act="sell-mat" data-key="${k}" data-n="1">Продать</button>
+        </div>`;
+      }).join('')}
+    </div>` : '<div class="muted small">Руда закончилась — в шахтах она попадается вместе с камнями.</div>'}
+  </div>
+
+  <div class="panel">
+    <h2>💎 Огранённые кристаллы <span class="chip">${s.crystals.length}</span></h2>
+    ${s.crystals.length ? `<div class="grid g3">${s.crystals.map(c=>crystalCard(c)).join('')}</div>`
+      : '<div class="muted small">Пока нет кристаллов. Огранка — во вкладке «Огранка».</div>'}
+  </div>
+
+  <div class="panel">
+    <h2>💍 Украшения <span class="chip">${s.jewelry.length}</span></h2>
+    ${s.jewelry.length ? `<div class="grid g3">${s.jewelry.map(j=>jewelryCard(j)).join('')}</div>`
+      : '<div class="muted small">Пусто. Создавайте украшения во вкладке «Ювелир» — они стоят в 2–3 раза дороже кристалла.</div>'}
+  </div>
+
+  <div class="panel">
+    <h2>⚔️ Мечи <span class="chip">${s.swords.length}</span></h2>
+    ${s.swords.length ? `<div class="grid g3">${s.swords.map(x=>swordCard(x)).join('')}</div>`
+      : '<div class="muted small">Пусто. Кузница — во вкладке «Кузница».</div>'}
+  </div>`;
+}
+
+function crystalCard(c){
+  const t = STONE_TYPES[c.key];
+  return `<div class="stone-card">
+    <div class="head">${gemHTML(c.key,40)}
+      <div style="flex:1">
+        <div class="nm">${t.name} <span class="chip">${c.carat} кт</span></div>
+        <div class="meta">${c.clarity} · ${c.color} · чистота ×${c.qmult}</div>
+      </div>
+    </div>
+    <div class="row between">
+      <b class="gold">${game.fmtMoney(game.crystalPrice(c))}</b>
+      <div class="row">
+        <button class="btn sm" data-act="museum-place" data-id="${c.id}" ${museumHasRoom()?'':'disabled'} title="${museumHasRoom()?'Выставить в музей':'Витрины заполнены'}">🏛️</button>
+        <button class="btn sm gold" data-act="sell-crystal" data-id="${c.id}">Продать</button>
+      </div>
+    </div>
+  </div>`;
+}
+function jewelryCard(j){
+  const t = STONE_TYPES[j.key], it = ITEM_TYPES[j.type];
+  return `<div class="stone-card">
+    <div class="head">${gemHTML(j.key,40)}
+      <div style="flex:1">
+        <div class="nm">${it.icon} ${it.name} <span class="chip">${j.carat} кт</span></div>
+        <div class="meta">${t.name} · ${j.clarity} · <span style="color:${qColor(j.quality)};font-weight:700">${qName(j.quality)}</span></div>
+      </div>
+    </div>
+    <div class="row between">
+      <b class="gold">${game.fmtMoney(game.jewelryPrice(j))}</b>
+      <button class="btn sm gold" data-act="sell-jewelry" data-id="${j.id}">Продать</button>
+    </div>
+  </div>`;
+}
+function swordCard(x){
+  const rec = SWORDS[x.type];
+  return `<div class="stone-card">
+    <div class="head"><div class="sword-big">${rec.icon}</div>
+      <div style="flex:1">
+        <div class="nm">${rec.name}</div>
+        <div class="meta">Урон ${x.atk.toFixed(1)} · <span style="color:${qColor(x.quality)};font-weight:700">${qName(x.quality)}</span></div>
+      </div>
+    </div>
+    <div class="row between">
+      <b class="gold">${game.fmtMoney(game.swordPrice(x))}</b>
+      <button class="btn sm gold" data-act="sell-sword" data-id="${x.id}">Продать</button>
+    </div>
+  </div>`;
+}
+
+/* ================= VIEW: LAP ================= */
+function viewLap(){
+  const s = state;
+  const entries = Object.keys(STONE_TYPES).filter(k=>s.inventory[k] && s.inventory[k].length>0);
+  return `<h1>💎 Ограночная мастерская</h1>
+  <p class="sub">Камень нужно очистить и огранить. Из ${GAME.COIN_RUB ? '' : ''}нескольких кусков одного вида получается кристалл: чем больше суммарный вес — тем дороже. Чистота и цвет добавляют множитель.</p>
+
+  ${entries.length ? `<div class="grid g2">${entries.map(key=>{
+    const t = STONE_TYPES[key];
+    const arr = s.inventory[key].slice().sort((a,b)=>b.size-a.size);
+    const canG = arr.length >= t.parts;
+    const est = game.stoneValue(key, arr.slice(0,t.parts).reduce((a,x)=>a+x.size,0), 1, true);
+    const fee = game.gradingFee(key);
+    return `<div class="stone-card">
+      <div class="head">${gemHTML(key,44)}
+        <div style="flex:1">
+          <div class="nm">${t.name}</div>
+          <div class="meta">${arr.length} кусков · нужно ×${t.parts} · прибл. ${game.fmtMoney(est)} за кристалл</div>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn ${canG?'purple':'ghost'}" data-act="grade" data-key="${key}" ${canG?'':'disabled'}>Огранить ${fee?'· '+game.fmtMoney(fee):''}</button>
+        <span class="tiny muted">${canG? 'возьмёт самые крупные куски' : 'не хватает кусков'}</span>
+      </div>
+    </div>`;
+  }).join('')}</div>` : '<div class="panel center muted">Нет сырья для огранки. <button class="btn gold sm" data-act="goto-mine">В шахту ⛏️</button></div>'}
+
+  <div class="panel">
+    <h2>Стандарты качества</h2>
+    <div class="row small">
+      <span class="muted">Чистота:</span> ${CLARITY.map(c=>`<span class="chip">${c.name} ×${c.mult}</span>`).join(' ')}
+    </div>
+    <div class="row small" style="margin-top:8px">
+      <span class="muted">Цвет:</span> ${COLORS.map(c=>`<span class="chip">${c.name} ×${c.mult}</span>`).join(' ')}
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Готовые кристаллы <span class="chip">${s.crystals.length}</span></h2>
+    ${s.crystals.length ? `<div class="grid g3">${s.crystals.map(c=>crystalCard(c)).join('')}</div>` : '<div class="muted small">Пока пусто.</div>'}
+  </div>
+
+  <div class="panel">
+    <h2>📖 Энциклопедия камней</h2>
+    <div class="grid g3">
+      ${Object.keys(STONE_TYPES).map(k=>{
+        const t = STONE_TYPES[k];
+        const seen = s.seenCards[k];
+        return `<div class="list-item" style="${seen?'':'opacity:.55'}">
+          ${gemHTML(k,30)}
+          <div class="grow"><div class="t">${t.name} ${seen?'':'<span class="tiny muted">— не найден</span>'}</div>
+          <div class="s">Тир ${t.tier} · ${seen?'огранка из '+t.parts+' кусков':'откройте шахту с этим камнем'}</div></div>
+          <div class="chip ${seen?'gold':''}">${seen?game.fmtMoney(Math.round(game.stoneValue(k,100,1,true)*sellBonus()))+'/100кт':'🔒'}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ================= VIEW: JEWEL = */
+function viewJewel(){
+  const s = state;
+  const crystal = s.crystals.find(c=>c.id===ui.jewelCrystal) || s.crystals[0];
+  if (crystal) ui.jewelCrystal = crystal.id;
+  const ex = JEWELRY_EXTRAS[ui.jewelType];
+  const type = ITEM_TYPES[ui.jewelType];
+
+  return `<h1>💍 Ювелирная мастерская</h1>
+  <p class="sub">Вставьте кристалл в оправу — стоимость вырастет в 2–3 раза. Иногда получается <b class="gold">легендарное</b> украшение.</p>
+
+  <div class="panel">
+    <h2>1. Выберите кристалл</h2>
+    ${s.crystals.length ? `<div class="grid g3">
+      ${s.crystals.map(c=>`<button class="stone-card" data-act="jewel-pick" data-id="${c.id}" style="cursor:pointer; text-align:left; ${c.id===ui.jewelCrystal?'border-color:#7c5c26; box-shadow:0 0 0 1px #7c5c26 inset':''}">
+        <div class="head">${gemHTML(c.key,34)}<div><div class="nm">${STONE_TYPES[c.key].name}</div><div class="meta">${c.carat} кт · ${c.clarity}</div></div></div>
+        <div class="tiny muted">${game.fmtMoney(game.crystalPrice(c))}</div>
+      </button>`).join('')}
+    </div>` : '<div class="muted small">Сначала ограните камни во вкладке «Огранка».</div>'}
+  </div>
+
+  <div class="panel">
+    <h2>2. Выберите изделие</h2>
+    <div class="tabs-inline">
+      ${Object.keys(ITEM_TYPES).map(k=>`<div class="ti ${k===ui.jewelType?'active':''}" data-act="jewel-type" data-type="${k}">${ITEM_TYPES[k].icon} ${ITEM_TYPES[k].name} <span class="tiny muted">×${ITEM_TYPES[k].mult}</span></div>`).join('')}
+    </div>
+    <div class="row between">
+      <div>
+        <div class="small">Материалы: ${Object.keys(ex.mats).map(k=>{
+          const have = s.materials[k]||0, need = ex.mats[k];
+          return `<span class="chip ${have>=need?'good':'bad'}">${MATERIALS[k].icon} ${MATERIALS[k].name} ${have}/${need}</span>`;
+        }).join(' ')}</div>
+        <div class="small muted" style="margin-top:6px">Работа ювелира: ${game.fmtMoney(ex.fee)}</div>
+      </div>
+      <div class="center">
+        <div class="tiny muted">Итоговая цена ≈</div>
+        <b class="gold">${crystal? game.fmtMoney(Math.round(game.stoneValue(crystal.key,crystal.carat,crystal.qmult,true)*type.mult*sellBonus())) : '—'}</b>
+      </div>
+    </div>
+    <button class="btn purple block lg" style="margin-top:10px" data-act="craft-jewel" ${crystal && game.canCraftJewelry(ui.jewelType, ui.jewelCrystal).ok?'':'disabled'}>
+      ${type.icon} Создать «${type.name}» ${crystal? '(' + STONE_TYPES[crystal.key].name + ' ' + crystal.carat + ' кт)':''}
+    </button>
+    ${crystal && !game.canCraftJewelry(ui.jewelType, ui.jewelCrystal).ok ? `<div class="tiny warn center" style="margin-top:8px">${game.canCraftJewelry(ui.jewelType, ui.jewelCrystal).why || ''}</div>`:''}
+    <div class="tiny muted" style="margin-top:8px">Не хватает серебра или золота? Сырьё продаётся во вкладке «Скупка».</div>
+  </div>
+
+  <div class="panel">
+    <h2>Готовые украшения <span class="chip">${s.jewelry.length}</span></h2>
+    ${s.jewelry.length ? `<div class="grid g3">${s.jewelry.map(j=>jewelryCard(j)).join('')}</div>` : '<div class="muted small">Пока пусто.</div>'}
+  </div>`;
+}
+
+/* ================= VIEW: FORGE ================= */
+function viewForge(){
+  const s = state;
+  return `<h1>⚔️ Кузница</h1>
+  <p class="sub">Мечи покупают богатые горожане и стража. Чем выше качество — тем выше наценка. Редкие камни в рецепте дают лучший клинок.</p>
+  <div class="grid g2">
+  ${Object.keys(SWORDS).map(k=>{
+    const rec = SWORDS[k];
+    const chk = game.canForgeSword(k);
+    return `<div class="stone-card">
+      <div class="head"><div class="sword-big">${rec.icon}</div>
+        <div style="flex:1"><div class="nm">${rec.name}</div><div class="meta">Базовый урон ${rec.atk} · цена от ${game.fmtMoney(rec.cost*2.1 + rec.atk*14)}</div></div>
+      </div>
+      <div class="chips">
+        ${Object.keys(rec.mats).map(mk=>{
+          const isStone = !!STONE_TYPES[mk];
+          const have = isStone ? (s.inventory[mk]||[]).length : (s.materials[mk]||0);
+          const need = rec.mats[mk];
+          const nm = isStone ? STONE_TYPES[mk].name : MATERIALS[mk].name;
+          return `<span class="chip ${have>=need?'good':'bad'}">${isStone?STONE_TYPES[mk].icon:MATERIALS[mk].icon} ${nm} ${have}/${need}</span>`;
+        }).join(' ')}
+        <span class="chip ${s.money>=rec.cost?'good':'bad'}">💰 ${game.fmtMoney(rec.cost)}</span>
+      </div>
+      <button class="btn ${chk.ok?'green':'ghost'} block" data-act="forge" data-type="${k}" ${chk.ok?'':'disabled'}>⚒️ Выковать</button>
+    </div>`;
+  }).join('')}
+  </div>
+
+  <div class="panel">
+    <h2>Готовые мечи <span class="chip">${s.swords.length}</span></h2>
+    ${s.swords.length ? `<div class="grid g3">${s.swords.map(x=>swordCard(x)).join('')}</div>` : '<div class="muted small">Пока пусто.</div>'}
+  </div>`;
+}
+
+/* ================= VIEW: MUSEUM ================= */
+function viewMuseum(){
+  const s = state;
+  const slots = MUSEUM_SLOTS + s.counters;
+  const free = s.crystals.slice().sort((a,b)=>b.carat-a.carat);
+  return `<h1>🏛️ Музей</h1>
+  <p class="sub">Каждый выставленный камень даёт <b class="good">+${Math.round(GAME.MUSEUM_BONUS_PCT*100)}% к цене продажи</b> и приносит билеты. Билеты открывают новые секторы Великой Дыры.</p>
+
+  <div class="grid g4" style="margin-bottom:14px">
+    <div class="stat-tile"><div class="k">Экспонаты</div><div class="v">${s.museum.length} / ${slots}</div></div>
+    <div class="stat-tile"><div class="k">Бонус к ценам</div><div class="v gold">+${Math.round((sellBonus()-1)*100)}%</div></div>
+    <div class="stat-tile"><div class="k">Билеты</div><div class="v info">${Math.floor(s.tickets)} <span class="small muted">+${ticketsRate().toFixed(1)}/с</span></div></div>
+    <div class="stat-tile"><div class="k">Страховочная оценка</div><div class="v">${game.fmtMoney(museumValue())}</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Витрины</h2>
+    <div class="grid g4">
+      ${Array.from({length:slots}).map((_,i)=>{
+        const m = s.museum[i];
+        if (!m) return `<div class="slot"><div class="muted" style="font-size:22px">＋</div><div class="tiny muted">свободная витрина</div></div>`;
+        return `<div class="slot filled">
+          ${gemHTML(m.key, 56)}
+          <div class="tiny" style="font-weight:700">${STONE_TYPES[m.key].name}</div>
+          <div class="tiny muted">${m.carat} кт · ${m.clarity}</div>
+          <button class="btn sm ghost" data-act="museum-remove" data-id="${m.id}">Забрать</button>
+        </div>`;
+      }).join('')}
+    </div>
+    ${!museumHasRoom()? '<div class="tiny warn" style="margin-top:8px">Все витрины заняты. Купите ещё кассу в магазине, чтобы расширить музей.</div>':''}
+  </div>
+
+  <div class="panel">
+    <h2>Выставить кристалл</h2>
+    ${free.length ? `<div class="grid g3">
+      ${free.slice(0,9).map(c=>`<div class="stone-card">
+        <div class="head">${gemHTML(c.key,34)}<div style="flex:1"><div class="nm">${STONE_TYPES[c.key].name}</div><div class="meta">${c.carat} кт · ${c.clarity}</div></div></div>
+        <div class="row between"><span class="tiny muted">+${Math.round(GAME.MUSEUM_BONUS_PCT*100)}% к ценам</span>
+        <button class="btn sm blue" data-act="museum-place" data-id="${c.id}" ${museumHasRoom()?'':'disabled'}>Выставить</button></div>
+      </div>`).join('')}
+    </div>` : '<div class="muted small">Нет свободных кристаллов — сначала ограните камни.</div>'}
+  </div>
+
+  <div class="panel">
+    <h2>📇 Экспонаты года</h2>
+    <div class="grid g3">
+      ${EXHIBITS.filter(e=>!['jewel_first','jewel_legend','sword_first','sword_diamond','quest_5','miner_10','hole_master'].includes(e.id)).map(e=>{
+        const done = s.rewardsDone.includes(e.id);
+        return `<div class="list-item" style="${done?'border-color:#4a3a6b':''}">
+          <div style="font-size:18px">${done?e.icon:'🔒'}</div>
+          <div class="grow"><div class="t">${e.name}</div><div class="s">${e.desc}</div></div>
+          <div class="chip ${done?'purple':''}">${done?'✓':game.fmtMoney(e.money)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ================= VIEW: ORDERS ================= */
+function viewOrders(){
+  const s = state;
+  const left = Math.max(0, 90 - Math.floor((Date.now() - (s.orderCooldownAt||0))/1000));
+  return `<h1>📦 Заказы горожан</h1>
+  <p class="sub">Заказы платят больше скупки и дают опыт. Новые появляются автоматически${left>0?` через ${left} с`:''}.</p>
+  <div class="grid g2">
+    ${s.orders.map(o=>{
+      const ok = game.canFulfillOrder(o);
+      return `<div class="stone-card">
+        <div class="row between">
+          <span class="chip info">${(ORDER_TYPES.find(t=>t.kind===o.kind)||{}).label||'Заказ'}</span>
+          <b class="gold">${game.fmtMoney(o.reward)}</b>
+        </div>
+        <div class="nm" style="margin:8px 0 4px">${o.text}</div>
+        <div class="tiny muted">Награда: ${Math.floor(o.reward)} ₽ · ${o.xp} опыта · 🎟️ 8 билетов</div>
+        <button class="btn ${ok?'green':'ghost'} block" style="margin-top:9px" data-act="fulfill" data-id="${o.id}" ${ok?'':'disabled'}>${ok?'Выполнить':'Нет предмета'}</button>
+      </div>`;
+    }).join('')}
+  </div>
+  ${s.orders.length===0?'<div class="panel muted small">Заказов нет — обновите через минуту.</div>':''}
+  <div class="panel">
+    <h2>Как это работает</h2>
+    <div class="small muted">Заказы бывают трёх видов: поставка руды, украшение нужного вида и качества, кристалл нужного размера. Для сдачи подойдёт любой подходящий предмет из сумки.</div>
+  </div>`;
+}
+
+/* ================= VIEW: MARKET ================= */
+function viewMarket(){
+  const s = state;
+  const mkBar = (v)=>{
+    const w = Math.round((v-0.7)/0.75*100);
+    const col = v>1.08 ? 'green' : v<0.92 ? 'red' : 'gold';
+    return `<div class="bar" style="width:70px"><i style="width:${clamp(w,4,100)}%; background:${v>1.08?'linear-gradient(90deg,#22c55e,#86efac)':v<0.92?'linear-gradient(90deg,#ef4444,#fca5a5)':'linear-gradient(90deg,#ffb020,#ffe08a)'}"></i></div><span class="tiny ${v>1.08?'good':v<0.92?'bad':'muted'}">×${v.toFixed(2)}</span>`;
+  };
+  return `<h1>🧾 Скупка и рынок</h1>
+  <p class="sub">Цены меняются каждые 2 минуты. Продавайте, когда рынок разогрет. Здесь же можно <b>купить сырьё</b> для ювелирки.</p>
+
+  <div class="tabs-inline">
+    <div class="ti ${ui.marketTab==='stones'?'active':''}" data-act="market-tab" data-t="stones">💎 Камни</div>
+    <div class="ti ${ui.marketTab==='mats'?'active':''}" data-act="market-tab" data-t="mats">🪨 Сырьё</div>
+  </div>
+
+  ${ui.marketTab==='stones' ? `
+  <div class="panel">
+    <div class="row between" style="margin-bottom:10px">
+      <h2 style="margin:0">Котировки камней</h2>
+      <button class="btn sm gold" data-act="sell-all-raw">Слить всё сырьё (${invCount()})</button>
+    </div>
+    <div class="scrollx">
+      <table style="width:100%; border-collapse:collapse; font-size:12.5px">
+        <tr class="muted tiny" style="text-align:left">
+          <th style="padding:6px">Камень</th><th>За карат (100 кт)</th><th>Рынок</th><th>В сумке</th><th>Огранённый</th>
+        </tr>
+        ${Object.keys(STONE_TYPES).map(k=>{
+          const t = STONE_TYPES[k];
+          const cnt = (s.inventory[k]||[]).length;
+          const raw100 = game.stoneValue(k,100,1,false);
+          const cut100 = Math.round(game.stoneValue(k,100,1,true)*sellBonus());
+          return `<tr style="border-top:1px solid #232c3d">
+            <td style="padding:8px 6px" class="nowrap">${gemHTML(k,20)} <b>${t.name}</b></td>
+            <td class="num">${game.fmtMoney(raw100)}</td>
+            <td><div class="row" style="gap:5px">${mkBar(game.marketMult(k))}</div></td>
+            <td class="num">${cnt} шт</td>
+            <td class="num gold">${game.fmtMoney(cut100)}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>
+    <div class="tiny muted" style="margin-top:8px">Сырьё в скупке стоит ~72% от огранённого камня. Огранка окупается при крупных камнях.</div>
+  </div>
+  ${s.crystals.length || s.jewelry.length || s.swords.length ? `
+  <div class="panel">
+    <h2>Готовые изделия — быстрая продажа</h2>
+    <div class="grid g3">
+      ${s.crystals.map(c=>crystalCard(c)).join('')}
+      ${s.jewelry.map(j=>jewelryCard(j)).join('')}
+      ${s.swords.map(x=>swordCard(x)).join('')}
+    </div>
+  </div>`:''}` : `
+  <div class="panel">
+    <h2>Сырьё: купить и продать</h2>
+    <div class="grid g2">
+      ${Object.keys(MATERIALS).filter(k=>k!=='focus').map(k=>{
+        const m = MATERIALS[k];
+        const have = s.materials[k]||0;
+        const sellP = game.materialPrice(k);
+        const buyP = Math.round(sellP*2.2);
+        return `<div class="list-item">
+          <div style="font-size:22px">${m.icon}</div>
+          <div class="grow"><div class="t">${m.name} <span class="chip">×${have}</span></div>
+          <div class="s">продажа ${game.fmtMoney(sellP)} · покупка ${game.fmtMoney(buyP)}</div></div>
+          <div class="row" style="gap:5px">
+            <button class="btn sm" data-act="buy-mat" data-key="${k}" data-n="1" ${s.money<buyP?'disabled':''}>Купить</button>
+            <button class="btn sm gold" data-act="sell-mat" data-key="${k}" data-n="10" ${have<10?'disabled':''}>×10</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="tiny muted" style="margin-top:8px">Сырьё нужно для ювелирки и кузницы. Покупка в 2.2 раза дороже продажи — выгоднее добывать самому.</div>
+  </div>`}`;
+}
+
+/* ================= VIEW: SHOP ================= */
+function viewShop(){
+  const s = state;
+  return `<h1>🪙 Магазин</h1>
+  <p class="sub">1 монета ≈ <b class="gold">${GAME.COIN_RUB} ₽</b> (в магазине пакеты от ${Math.round(COIN_PACKS[0].price/COIN_PACKS[0].coins*10)/10} ₽ за монету). Монеты — на ускорение: энергия, ящики старателя, расширение музея.</p>
+
+  <div class="panel" style="border-color:#5c4a22; background:linear-gradient(180deg, rgba(60,48,20,.35), rgba(24,30,42,.92))">
+    <div class="row between">
+      <div><b class="gold">Ваш баланс</b><div class="small muted">${Math.floor(s.coins)} 🪙 · ${game.fmtMoney(s.money)} · 🎟️ ${Math.floor(s.tickets)}</div></div>
+      <span class="chip">💡 Демо-платежи</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Пакеты монет</h2>
+    <div class="grid g4">
+      ${COIN_PACKS.map((p,i)=>`<div class="pack" data-act="buy-coins" data-i="${i}">
+        ${p.tag?`<div class="tag">${p.tag}</div>`:''}
+        <div class="coins">🪙 ${p.coins.toLocaleString('ru-RU')}</div>
+        <div class="rub">${p.price.toLocaleString('ru-RU')} ₽</div>
+        <div class="bonus">${p.bonus?`+${p.bonus} бонус`:''}</div>
+        <div class="tiny muted" style="margin-top:6px">${(p.price/(p.coins+p.bonus)).toFixed(2)} ₽/монета</div>
+      </div>`).join('')}
+    </div>
+    <div class="tiny muted" style="margin-top:10px">В реальной игре здесь будет платёжный шлюз. Сейчас покупки бесплатны и служат демонстрацией экономики.</div>
+  </div>
+
+  <div class="panel">
+    <h2>Товары за монеты</h2>
+    <div class="grid g3">
+      ${SHOP_ITEMS.filter(x=>x.currency==='coins').map(it=>`<div class="stone-card">
+        <div class="head"><div style="font-size:24px">${it.icon}</div><div style="flex:1"><div class="nm">${it.name}</div><div class="meta">${it.desc}</div></div></div>
+        <button class="btn gold block" data-act="buy-item" data-id="${it.id}" ${s.coins<it.price?'disabled':''}>🪙 ${it.price}</button>
+      </div>`).join('')}
+      <div class="stone-card">
+        <div class="head"><div style="font-size:24px">🎁</div><div style="flex:1"><div class="nm">Ящик старателя</div><div class="meta">Случайный камень — от аметиста до алмаза (шанс есть всегда)</div></div></div>
+        <button class="btn gold block" data-act="buy-box" ${s.coins<25?'disabled':''}>🪙 25</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Товары за деньги и билеты</h2>
+    <div class="grid g3">
+      ${SHOP_ITEMS.filter(x=>x.currency==='money').map(it=>{
+        const maxed = (it.id==='lamp' && s.lamps>=LAMP_MAX) || (it.id==='vip' && s.vip);
+        return `<div class="stone-card">
+          <div class="head"><div style="font-size:24px">${it.icon}</div><div style="flex:1"><div class="nm">${it.name} ${it.id==='lamp'?`<span class="chip">${s.lamps}/${LAMP_MAX}</span>`:''}</div><div class="meta">${it.desc}</div></div></div>
+          <button class="btn ${maxed?'ghost':'green'} block" data-act="buy-item" data-id="${it.id}" ${maxed||s.money<it.price?'disabled':''}>${maxed?'Максимум':game.fmtMoney(it.price)}</button>
+        </div>`;
+      }).join('')}
+      <div class="stone-card">
+        <div class="head"><div style="font-size:24px">⚡</div><div style="flex:1"><div class="nm">Энергетик из билетов</div><div class="meta">+15 энергии за 60 билетов музея</div></div></div>
+        <button class="btn blue block" data-act="buy-item" data-id="energy_ticket" ${s.tickets<60?'disabled':''}>🎟️ 60</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Настройки</h2>
+    <div class="row between">
+      <div class="small muted">Звук и вибрация</div>
+      <button class="btn sm ${s.sfx?'green':'ghost'}" data-act="toggle-sfx">${s.sfx?'🔊 Вкл':'🔇 Выкл'}</button>
+    </div>
+    <div class="row between" style="margin-top:8px">
+      <div class="small muted">Сброс прогресса</div>
+      <button class="btn sm danger" data-act="reset">Начать заново</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Что ещё есть в игре</h2>
+    <div class="grid g2 small muted">
+      <div>🏛️ Касса музея — ещё витрина и +1 билет/с</div>
+      <div>⛑️ Лампы — +30% находок в шахте (до 3)</div>
+      <div>🕳️ Билеты — новые секторы Великой Дыры</div>
+      <div>⭐ VIP — +20% к продажам и +1 удача</div>
+      <div>💍 Ювелирка — кольца, серьги, браслеты, кулоны, короны</div>
+      <div>⚔️ Мечи — от железного до звёздного экскалибура</div>
+    </div>
+  </div>`;
+}
+
+/* ================= HELP ================= */
+function showHelp(){
+  openModal(`<h2>❓ Как играть</h2>
+  <div class="small" style="line-height:1.8">
+    <b>1. Добыча.</b> В шахте: <span class="kbd">WASD</span> — движение, мышь/свайп — обзор, <b>ЛКМ или Пробел</b> — удар киркой. Камни дают только <b>светящиеся жилы</b>. Каждый удар тратит 1 энергию.<br><br>
+    <b>2. Огранка.</b> Несколько кусков одного камня → один кристалл. Чистота и цвет дают множители.<br><br>
+    <b>3. Украшения.</b> Кристалл + серебро/золото → кольцо, серьги, браслет, кулон или корона. Цена ×2–3.2.<br><br>
+    <b>4. Кузница.</b> Руда и камни → мечи. Качество влияет на цену.<br><br>
+    <b>5. Музей.</b> Выставляйте камни: +${Math.round(GAME.MUSEUM_BONUS_PCT*100)}% к ценам за экспонат и билеты каждую секунду.<br><br>
+    <b>6. Шахты.</b> Открывайте новые рудники за деньги. Великая Дыра в Кимберли требует 2 лампы и 18 000 ₽ — там алмазы.<br><br>
+    <b>7. Заказы и рынок.</b> Заказы выгоднее. Рынок меняет цены каждые 2 минуты.<br><br>
+    <b>8. Донат.</b> 1 монета ≈ ${GAME.COIN_RUB} ₽. Монеты дают энергию и ящики старателя. Все покупки сейчас — демо, без реальных списаний.
+  </div>
+  <div class="foot"><button class="btn gold" data-act="close-modal">Понятно</button></div>`);
+}
+
+/* ================= ACTIONS ================= */
+document.addEventListener('click', (e)=>{
+  // клик по затемнённой подложке модалки
+  if (e.target && e.target.id === 'modalBack'){
+    if (!_modalSticky) closeModal();
+    return;
+  }
+  if (e.target.closest('#btnSwing')){ engine.swing(); return; }
+  if (e.target.closest('[data-exit-mine]')){ uiExitMine(); return; }
+  if (e.target.closest('#tSwing')){ engine.swing(); return; }
+  if (e.target.closest('#tLeft')){ engine.player.a -= 0.42; return; }
+  if (e.target.closest('#tRight')){ engine.player.a += 0.42; return; }
+  if (e.target.closest('[data-tab]')) return;   // вкладки обрабатывает nav
+  const el = e.target.closest('[data-act]');
+  if (el){
+    if (typeof sfxClick === 'function') sfxClick();
+    handleAction(el.dataset.act, el);
+  }
+});
+
+function handleAction(act, el){
+  const d = el.dataset;
+  switch(act){
+    case 'tab': switchTab(d.tabid); break;
+    case 'close-modal': closeModal(); break;
+    case 'restart-engine': {
+      const box = document.getElementById('engineDead'); if (box) box.remove();
+      if (mineLoc){ engine.exit(); setTimeout(()=>{ engine.enter(mineLoc); engine.resize && engine.resize(); }, 120); }
+      break;
+    }
+    case 'start-shift': closeModal(); switchTab('mine'); break;
+    case 'help': showHelp(); break;
+    case 'goto-mine': switchTab('mine'); break;
+    case 'enter': enterMine(d.loc); break;
+    case 'unlock-mine': {
+      const r = game.unlockMine(d.loc);
+      if (r.ok){ sfxUnlock(); render(); } else toast('❌ '+(r.why||'Не получилось'),'bad');
+      break;
+    }
+    case 'sector': state.sector = +d.i; toast('🕳️ Спуск: '+KIMBERLY_SECTORS[state.sector].name,'good'); render(); break;
+    case 'unlock-sector': {
+      const r = game.unlockSector();
+      if (r.ok){ sfxUnlock(); render(); } else toast('❌ '+r.why,'bad');
+      break;
+    }
+    case 'sel-stone': {
+      const key = d.key, id = d.id;
+      if (!ui.sel[key]) ui.sel[key] = new Set();
+      if (ui.sel[key].has(id)) ui.sel[key].delete(id); else ui.sel[key].add(id);
+      render();
+      break;
+    }
+    case 'sell-sel': {
+      const key = d.key, sel = ui.sel[key];
+      if (!sel) return;
+      let sum = 0;
+      for (const id of Array.from(sel)){
+        const arr = state.inventory[key]||[];
+        const i = arr.findIndex(s=>s.id===id);
+        if (i>=0){ const st = arr[i]; sum += game.stoneValue(key, st.size,1,false); arr.splice(i,1); }
+      }
+      game.addMoney(sum, '— продажа камней');
+      ui.sel[key] = new Set();
+      sfxCoin(); render();
+      break;
+    }
+    case 'sell-all-type': {
+      const key = d.key;
+      const arr = state.inventory[key]||[];
+      let sum = 0; const n = arr.length;
+      for (const st of arr) sum += game.stoneValue(key, st.size,1,false);
+      state.inventory[key] = [];
+      game.addMoney(sum, `— продано ${n} шт`);
+      sfxCoin(); render();
+      break;
+    }
+    case 'sell-all-raw': {
+      const ids = Object.keys(state.inventory).filter(k=>state.inventory[k].length);
+      const n = invCount();
+      if (!n){ toast('Сумка и так пуста','bad'); break; }
+      const r = game.sellAllRaw();
+      toast(`💰 Продано ${r.count} камней за ${game.fmtMoney(r.total)}`,'money');
+      sfxCoin(); render();
+      break;
+    }
+    case 'grade': {
+      const c = game.gradeStone(d.key);
+      if (c){
+        if (typeof haptic === 'function') haptic('success');
+        const t = STONE_TYPES[c.key];
+        openModal(`<div class="center">
+          <div style="display:flex;justify-content:center;margin-bottom:10px">${gemHTML(c.key,84)}</div>
+          <h2 style="justify-content:center">Кристалл готов!</h2>
+          <div class="small muted">${t.name} · ${c.carat} кт</div>
+          <div class="row" style="justify-content:center;margin:10px 0">
+            <span class="chip info">Чистота ${c.clarity}</span>
+            <span class="chip gold">Цвет ${c.color}</span>
+            <span class="chip purple">Множитель ×${c.qmult}</span>
+          </div>
+          <div class="small">Оценка: <b class="gold">${game.fmtMoney(game.crystalPrice(c))}</b></div>
+          <div class="foot" style="justify-content:center">
+            <button class="btn ghost" data-act="close-modal">В сумку</button>
+            <button class="btn blue" data-act="museum-place" data-id="${c.id}">🏛️ В музей</button>
+            <button class="btn gold" data-act="sell-crystal" data-id="${c.id}">Продать</button>
+          </div>
+        </div>`, {sticky:true});
+        render(); updateHUD();
+      } else {
+        toast('Нужно больше кусков этого камня','bad');
+      }
+      break;
+    }
+    case 'sell-crystal': {
+      const id = d.id;
+      const c = state.crystals.find(x=>x.id===id);
+      if (!c) break;
+      const price = game.crystalPrice(c);
+      game.sellCrystal(id);
+      toast(`💎 Продано: ${STONE_TYPES[c.key].name} ${c.carat} кт за ${game.fmtMoney(price)}`,'money');
+      sfxCoin(); closeModal(); render(); break;
+    }
+    case 'sell-jewelry': {
+      const j = state.jewelry.find(x=>x.id===d.id);
+      if (!j) break;
+      const price = game.jewelryPrice(j);
+      game.sellJewelry(d.id);
+      toast(`💍 Продано: ${ITEM_TYPES[j.type].name} за ${game.fmtMoney(price)}`,'money');
+      sfxCoin(); render(); break;
+    }
+    case 'sell-sword': {
+      const x = state.swords.find(s=>s.id===d.id);
+      if (!x) break;
+      const price = game.swordPrice(x);
+      game.sellSword(d.id);
+      toast(`⚔️ Продан: ${SWORDS[x.type].name} за ${game.fmtMoney(price)}`,'money');
+      sfxCoin(); render(); break;
+    }
+    case 'sell-mat': {
+      const n = +d.n||1;
+      const total = game.sellMaterial(d.key, n);
+      if (total>0){ toast(`+${game.fmtMoney(total)} — ${MATERIALS[d.key].name}`,'money'); sfxCoin(); render(); }
+      break;
+    }
+    case 'buy-mat': {
+      const n = +d.n||1;
+      const price = Math.round(game.materialPrice(d.key)*2.2)*n;
+      if (state.money < price){ toast('Не хватает денег','bad'); break; }
+      state.money -= price;
+      state.materials[d.key] = (state.materials[d.key]||0)+n;
+      toast(`Куплено: ${MATERIALS[d.key].name} ×${n}`,'good'); render(); break;
+    }
+    case 'jewel-pick': ui.jewelCrystal = d.id; render(); break;
+    case 'jewel-type': ui.jewelType = d.type; render(); break;
+    case 'craft-jewel': {
+      const r = game.craftJewelry(ui.jewelType, ui.jewelCrystal);
+      if (!r.ok){ toast('❌ '+(r.why||'Не вышло'),'bad'); if (typeof haptic==='function') haptic('error'); break; }
+      if (typeof haptic === 'function') haptic('success');
+      const j = r.jewelry;
+      openModal(`<div class="center">
+        <div style="display:flex;justify-content:center;margin-bottom:8px">${gemHTML(j.key,84)}</div>
+        <h2 style="justify-content:center">${ITEM_TYPES[j.type].icon} ${ITEM_TYPES[j.type].name} готово!</h2>
+        <div class="small muted">${STONE_TYPES[j.key].name} · ${j.carat} кт · ${j.clarity}</div>
+        <div class="row" style="justify-content:center;margin:10px 0">
+          <span class="chip" style="color:${qColor(j.quality)};border-color:${qColor(j.quality)}66">Качество: ${qName(j.quality)}</span>
+          <span class="chip purple">Множитель ×${j.qmult2}</span>
+        </div>
+        <div class="small">Оценка: <b class="gold">${game.fmtMoney(game.jewelryPrice(j))}</b></div>
+        <div class="foot" style="justify-content:center">
+          <button class="btn ghost" data-act="close-modal">В сумку</button>
+          <button class="btn gold" data-act="sell-jewelry" data-id="${j.id}">Продать</button>
+        </div>
+      </div>`, {sticky:true});
+      render(); break;
+    }
+    case 'forge': {
+      const r = game.forgeSword(d.type);
+      if (!r.ok){ toast('❌ '+(r.why||'Не вышло'),'bad'); if (typeof haptic==='function') haptic('error'); break; }
+      if (typeof haptic === 'function') haptic('success');
+      const sw = r.sword;
+      openModal(`<div class="center">
+        <div style="font-size:64px; margin-bottom:6px">${SWORDS[sw.type].icon}</div>
+        <h2 style="justify-content:center">${SWORDS[sw.type].name}</h2>
+        <div class="row" style="justify-content:center;margin:8px 0">
+          <span class="chip" style="color:${qColor(sw.quality)};border-color:${qColor(sw.quality)}66">${qName(sw.quality)}</span>
+          <span class="chip">Урон ${sw.atk.toFixed(1)}</span>
+        </div>
+        <div class="small">Цена: <b class="gold">${game.fmtMoney(game.swordPrice(sw))}</b></div>
+        <div class="foot" style="justify-content:center">
+          <button class="btn ghost" data-act="close-modal">В сумку</button>
+          <button class="btn gold" data-act="sell-sword" data-id="${sw.id}">Продать</button>
+        </div>
+      </div>`, {sticky:true});
+      render(); break;
+    }
+    case 'museum-place': {
+      const r = game.placeInMuseum(d.id);
+      if (!r.ok){ toast('❌ '+(r.why||'Не вышло'),'bad'); break; }
+      toast('🏛️ Экспонат выставлен! +2% к ценам','good'); sfxUnlock(); if (typeof haptic==='function') haptic('success'); closeModal(); render(); break;
+    }
+    case 'museum-remove': {
+      game.removeFromMuseum(d.id);
+      render(); break;
+    }
+    case 'fulfill': {
+      const r = game.fulfillOrder(d.id);
+      if (!r.ok){ toast('❌ '+(r.why||'Не вышло'),'bad'); break; }
+      toast('📦 Заказ выполнен!','good'); sfxCoin(); render(); break;
+    }
+    case 'market-tab': ui.marketTab = d.t; render(); break;
+    case 'toggle-sfx':
+      state.sfx = !state.sfx;
+      toast(state.sfx? '🔊 Звук включён':'🔇 Звук выключен', 'good');
+      render(); break;
+    case 'reset':
+      openModal(`<h2>Начать заново?</h2>
+        <div class="small muted">Весь прогресс, камни, музей и монеты будут удалены. Это действие нельзя отменить.</div>
+        <div class="foot">
+          <button class="btn ghost" data-act="close-modal">Отмена</button>
+          <button class="btn danger" data-act="reset-confirm">Удалить прогресс</button>
+        </div>`, {sticky:true});
+      break;
+    case 'reset-confirm':
+      hardReset(); closeModal(); save(); render(); updateHUD();
+      toast('Прогресс сброшен — новая смена!','good');
+      switchTab('home');
+      break;
+    case 'buy-coins': {
+      const r = game.buyCoins(+d.i);
+      if (r.ok){
+        sfxUnlock();
+        openModal(`<div class="center">
+          <div style="font-size:52px">🪙</div>
+          <h2 style="justify-content:center">+${r.pack.coins + r.pack.bonus} монет</h2>
+          <div class="small muted">Списано: ${r.pack.price} ₽ <span class="chip">демо</span></div>
+          <div class="foot" style="justify-content:center"><button class="btn gold" data-act="close-modal">Спасибо!</button></div>
+        </div>`);
+        render(); updateHUD();
+      }
+      break;
+    }
+    case 'buy-item': {
+      if (d.id === 'energy_ticket'){
+        if (state.tickets < 60){ toast('Не хватает билетов музея','bad'); break; }
+        state.tickets -= 60;
+        state.energy = Math.min(maxEnergyNow()+30, state.energy + 15);
+        toast('⚡ +15 энергии','good'); sfxCoin(); render(); updateHUD(); break;
+      }
+      const r = game.buyShop(d.id);
+      if (!r.ok){ toast('❌ '+(r.why||'Не вышло'),'bad'); sfxError(); break; }
+      toast('✅ Куплено','good'); sfxUnlock(); render(); updateHUD(); break;
+    }
+    case 'buy-box': {
+      if (state.coins < 25){ toast('Не хватает монет','bad'); break; }
+      state.coins -= 25;
+      const tiers = ['amethyst','topaz','emerald','sapphire','ruby','diamond','star'];
+      const weights = [30,26,20,13,7,3.4,0.6];
+      let r = Math.random()*100, acc=0, key='amethyst';
+      for (let i=0;i<tiers.length;i++){ acc += weights[i]; if (r<=acc){ key = tiers[i]; break; } }
+      const ranges = { amethyst:[60,300], topaz:[80,450], emerald:[100,600], sapphire:[150,800], ruby:[200,1200], diamond:[300,1800], star:[400,3000] };
+      const [mn,mx] = ranges[key];
+      const size = Math.round(mn + Math.random()*(mx-mn));
+      if (!state.inventory[key]) state.inventory[key] = [];
+      state.inventory[key].push({ id: Math.random().toString(36).slice(2), size, tint: 0 });
+      state.seenCards[key] = true;
+      game.checkExhibits(); game.checkAch();
+      openModal(`<div class="center">
+        <div style="display:flex;justify-content:center;margin-bottom:8px">${gemHTML(key,84)}</div>
+        <h2 style="justify-content:center">Из ящика: ${STONE_TYPES[key].icon} ${STONE_TYPES[key].name}</h2>
+        <div class="small muted">${size} карат</div>
+        <div class="foot" style="justify-content:center"><button class="btn gold" data-act="close-modal">Забрать</button></div>
+      </div>`);
+      sfxFind(STONE_TYPES[key].tier); render(); updateHUD(); break;
+    }
+  }
+}
+
+/* ================= MINE ENTER / EXIT ================= */
+function enterMine(loc){
+  if (!state.unlocked.includes(loc)) return;
+  mineLoc = loc;
+  if (typeof haptic === 'function') haptic('medium');
+  const h = HOSTS[loc];
+  const nameEl = document.getElementById('mineName');
+  if (nameEl) nameEl.textContent = `${h.name} · ур. ${state.level}`;
+  ['screen-city','screen-tab','screen-mine'].forEach(x=>document.getElementById(x).classList.remove('active'));
+  document.getElementById('screen-mine').classList.add('active');
+  document.body.classList.add('mine-mode');
+  currentTab = 'mine';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab==='mine'));
+  if (typeof showBackButton === 'function') showBackButton(true);
+  if (typeof engine !== 'undefined' && engine.hideHintSoon) engine.hideHintSoon(3200);
+  const joy = document.getElementById('joystick');
+  if (joy){ joy.classList.add('hint'); setTimeout(()=>joy.classList.remove('hint'), 6000); }
+  setTimeout(()=>{
+    if (!engine.canvas) engine.init(document.getElementById('mineCanvas'));
+    engine.enter(loc);
+    if (engine.setupResize) engine.setupResize();
+    engine.resize && engine.resize();
+  }, 60);
+  setTimeout(()=>{ if (engine.resize) engine.resize(); }, 350);
+  updateHUD();
+}
+function uiExitMine(){
+  engine.exit();
+  mineLoc = null;
+  document.body.classList.remove('mine-mode');
+  if (typeof showBackButton === 'function') showBackButton(false);
+  if (typeof haptic === 'function') haptic('select');
+  switchTab('mine');
+  render();
+}
+window.uiExitMine = uiExitMine;
+
+/* коллбэки движка */
+function onEngineFind(res){
+  updateHUD();
+  const feed = document.getElementById('mineFeed');
+  if (!feed) return;
+  const d = document.createElement('div');
+  d.className = 'feed-item';
+  if (res.type==='stone'){
+    const t = STONE_TYPES[res.key];
+    d.innerHTML = `${t.icon} <b>${t.name}</b> · ${res.stone.size} кт`;
+    game.addXP(1 + t.tier*0.5);
+  } else if (res.type==='material'){
+    const m = MATERIALS[res.key];
+    d.innerHTML = `${m.icon} ${m.name} ×${res.n}`;
+    game.addXP(0.5);
+  } else if (res.type==='full'){
+    d.innerHTML = `🎒 Сумка полна!`;
+  }
+  feed.appendChild(d);
+  if (feed.children.length > 6) feed.removeChild(feed.firstChild);
+  setTimeout(()=>{ if (d.parentNode) d.parentNode.removeChild(d); }, 6000);
+  updateBadges();
+}
+let _lastHintAt = 0;
+function onEngineHint(msg){
+  const now = Date.now();
+  if (now - _lastHintAt < 2600) return;
+  _lastHintAt = now;
+  const feed = document.getElementById('mineFeed');
+  if (!feed) return;
+  const d = document.createElement('div');
+  d.className = 'feed-item muted tiny';
+  d.textContent = msg;
+  feed.appendChild(d);
+  setTimeout(()=>{ if (d.parentNode) d.parentNode.removeChild(d); }, 2600);
+}
+function onEngineEmpty(){ /* тишина */ }
+window.onEngineFind = onEngineFind;
+window.onEngineEmpty = onEngineEmpty;
+window.onEngineHint = onEngineHint;
+
+/* ================= INIT ================= */
+function boot(){
+  const loaded = load();
+  // когда Telegram-контекст готов (может произойти в любой момент)
+  window.onTelegramReady = function(){
+    if (TG.user && TG.user.first_name){
+      setTimeout(()=>toast(`👋 Привет, ${TG.user.first_name}!`, 'good'), 600);
+    }
+    if (TG.cloud){
+      cloudLoad((val)=>{
+        if (!val) return;
+        try{
+          if (!localStorage.getItem(SAVE_KEY)){
+            localStorage.setItem(SAVE_KEY, val);
+            load(); render(); updateHUD();
+            // если прогресс уже был — убираем стартовое окно, чтобы оно не перекрывало игру
+            if (state.introDone && typeof closeModal === 'function') closeModal();
+            toast('☁️ Прогресс восстановлен из Telegram','good');
+          }
+        }catch(e){}
+      });
+    }
+  };
+  if (typeof TG !== 'undefined' && TG.inTelegram) window.onTelegramReady();
+  // мягкая подсказка про устройство
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (!isTouch && !(typeof TG!=='undefined' && TG.inTelegram)){
+    setTimeout(()=>{ const n = document.getElementById('desktopNote'); if (n) n.classList.add('show'); }, 1200);
+  }
+  tickMarket(true);
+  game.refreshOrders(true);
+  buildTabs();
+  engine.init(document.getElementById('mineCanvas'));
+  switchTab('home');
+  updateHUD();
+
+  // пассивный тик
+  setInterval(()=>{
+    passiveTick(Date.now());
+    updateHUD();
+    if (currentTab==='home' || currentTab==='museum' || currentTab==='orders'){
+      if (!window._lastPassiveRender || Date.now()-window._lastPassiveRender > 2500){
+        window._lastPassiveRender = Date.now();
+        render();
+      }
+    }
+  }, 1000);
+
+  // рынок и заказы
+  setInterval(()=>{
+    tickMarket(false);
+    game.refreshOrders(false);
+    if (currentTab==='market' || currentTab==='orders') render();
+  }, 5000);
+
+  // автосохранение
+  setInterval(()=>{
+    save();
+    if (typeof TG !== 'undefined' && TG.cloud){
+      try{ cloudSave(JSON.stringify(state)); }catch(e){}
+    }
+  }, 10000);
+  window.addEventListener('beforeunload', save);
+  document.addEventListener('visibilitychange', ()=>{
+    if (document.hidden){
+      save();
+      if (typeof TG !== 'undefined' && TG.cloud){ try{ cloudSave(JSON.stringify(state)); }catch(e){} }
+    }
+  });
+
+  if (!loaded || !state.introDone){
+    state.introDone = true;
+    setTimeout(()=>{
+      // если за это время прогресс успел загрузиться из Telegram — окно не показываем
+      if (state.introDone) return;
+      openModal(`<div class="center">
+        <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:34px">⛰️</span>${gemHTML('diamond',46)}<span style="font-size:34px">⛏️</span>
+        </div>
+        <h1 style="justify-content:center; font-size:21px">Добро пожаловать в Каменный путь</h1>
+        <div class="small muted" style="line-height:1.7; text-align:left; margin:12px 0">
+          Вы — старатель в городке у подножия гор. Бейте киркой по жилам, граните камни,
+          вставляйте их в серебро и золото, выставляйте лучшее в музей и спускайтесь
+          всё глубже — до <b class="info">Великой Дыры</b> в Кимберли, где лежат алмазы.
+        </div>
+        <div class="row" style="justify-content:center; gap:6px; margin-bottom:12px">
+          <span class="chip gold">⛏️ 5 шахт</span><span class="chip good">💍 ювелирка</span>
+          <span class="chip info">🏛️ музей</span><span class="chip purple">⚔️ кузница</span>
+        </div>
+        <button class="btn gold lg" data-act="start-shift">Начать смену</button>
+      </div>`, {sticky:true});
+    }, 300);
+  }
+  save();
+}
+window.switchTab = switchTab;
+
+if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+
+})();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5ad0b7e1b4addcd',t:'MTc5NDczMzAwOQ=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5ad0b7e1b4addcd',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
